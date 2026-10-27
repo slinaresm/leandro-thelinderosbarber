@@ -17,12 +17,12 @@ activa revisión manual allí si quieres una segunda aprobación.
 
 ### Migraciones PostgreSQL
 
-- `DATABASE_URL`: cadena PostgreSQL accesible desde GitHub Actions.
-- `PG_SSL`: `true` o `false` según indique el hosting.
-- `SITE_ORIGIN`: URL pública HTTPS, por ejemplo `https://tudominio.cl`.
-- `JWT_SECRET`: secreto de producción de al menos 32 caracteres.
+- `PG_LB_DATABASE_URL`: cadena PostgreSQL accesible desde GitHub Actions.
+- `PG_LB_SSL`: `true` o `false` según indique el hosting.
+- `APP_LB_SITE_ORIGIN`: URL pública HTTPS, por ejemplo `https://tudominio.cl`.
+- `APP_LB_JWT_SECRET`: secreto de producción de al menos 32 caracteres.
 
-`DATABASE_URL` debe aceptar conexión externa desde GitHub Actions. Si el hosting
+`PG_LB_DATABASE_URL` debe aceptar conexión externa desde GitHub Actions. Si el hosting
 solo permite conexiones PostgreSQL desde `localhost`, este flujo no podrá llegar
 a la BBDD; en ese caso la migración debe ejecutarse desde una Terminal/SSH del
 hosting o mediante un runner alojado en el mismo servidor.

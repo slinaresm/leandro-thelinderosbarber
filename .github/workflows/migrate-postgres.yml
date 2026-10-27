@@ -19,10 +19,10 @@ jobs:
     env:
       NODE_ENV: production
       DB_DRIVER: postgres
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      PG_SSL: ${{ secrets.PG_SSL }}
-      SITE_ORIGIN: ${{ secrets.SITE_ORIGIN }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      DATABASE_URL: ${{ secrets.PG_LB_DATABASE_URL }}
+      PG_SSL: ${{ secrets.PG_LB_SSL }}
+      SITE_ORIGIN: ${{ secrets.APP_LB_SITE_ORIGIN }}
+      JWT_SECRET: ${{ secrets.APP_LB_JWT_SECRET }}
     steps:
       - name: Obtener versión aprobada
         uses: actions/checkout@v4
