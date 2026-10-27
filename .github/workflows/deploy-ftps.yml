@@ -58,7 +58,6 @@ jobs:
             **/node_modules/**
             **/db/*.sqlite*
             **/uploads/**
-            !uploads/**/.gitkeep
 
       - name: Recordatorio operativo
         run: |
