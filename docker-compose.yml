@@ -1,0 +1,23 @@
+# Levanta un Postgres local para desarrollo/pruebas de la migracion.
+# Uso:
+#   docker compose up -d
+#   cd backend && npm run migrate:postgres
+#   DB_DRIVER=postgres npm run seed
+#   DB_DRIVER=postgres npm start
+version: "3.8"
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: barber_linderos_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: barber
+      POSTGRES_PASSWORD: barber
+      POSTGRES_DB: barber_linderos
+    ports:
+      - "5432:5432"
+    volumes:
+      - barber_linderos_pgdata:/var/lib/postgresql/data
+
+volumes:
+  barber_linderos_pgdata:

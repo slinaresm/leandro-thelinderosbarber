@@ -1,0 +1,33 @@
+.vintage-home .closing-section{position:relative;isolation:isolate;overflow:hidden;min-height:720px;display:flex;align-items:center;justify-content:flex-start;padding:100px 8%;text-align:left;background:#0d0f12;border-block:1px solid #71819955}
+.closing-photo{position:absolute;inset:0;z-index:-3;display:block}
+.closing-photo img{width:100%;height:100%;display:block;object-fit:cover;object-position:center 45%}
+.closing-overlay{position:absolute;inset:0;z-index:-2;background:linear-gradient(90deg,rgba(0,0,0,.89) 0%,rgba(0,0,0,.77) 34%,rgba(0,0,0,.46) 67%,rgba(0,0,0,.38) 100%)}
+.closing-content{width:min(100%,740px)}
+.vintage-home .closing-section .overline{justify-content:flex-start;margin-bottom:24px;color:#d3dfed;font-size:12px}
+.vintage-home .closing-section h2{font-size:clamp(42px,4.4vw,68px);line-height:1.1;margin-bottom:25px;max-width:740px;color:#f1f3f6;text-shadow:0 2px 18px #0006}
+.vintage-home .closing-section h2 em{color:#d5dde7}
+.closing-description{font-size:17px;line-height:1.85;color:#dae0e8;max-width:570px}
+.closing-benefits{display:flex;flex-wrap:wrap;gap:12px 22px;margin:28px 0 32px;list-style:none;padding:0;max-width:600px}
+.closing-benefits li{font-size:13px;line-height:1.7;color:#d9e2ee;display:flex;align-items:center;gap:9px}
+.closing-benefits li::before{content:'✓';font-size:12px;color:#d3dfee}
+.closing-actions{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.closing-secondary{display:inline-flex;align-items:center;justify-content:space-between;gap:18px;min-height:52px;padding:14px 18px;border:1px solid #cbd8e47a;color:#eef2f7;background:#0005;font-size:13px;line-height:1.5;transition:background .2s,border-color .2s}
+.closing-secondary:hover{background:#263449bd;border-color:#d0ddec}
+.closing-signin{font-size:14px;line-height:1.9;color:#c1ccda;margin-top:28px;max-width:600px}
+.closing-signin a{display:inline-flex;align-items:center;gap:10px;min-height:44px;color:#eef2f7;border-bottom:1px solid #acbfd55c}
+.closing-signin a:hover{border-color:#eef2f7}
+.closing-reassurance{font-size:12px;line-height:1.85;color:#b9c6d5;max-width:520px;margin-top:18px}
+@media(max-width:1000px){.vintage-home .closing-section{padding:80px 6%;min-height:720px}.closing-photo img{object-position:61% center}.closing-content{max-width:650px}}
+@media(max-width:760px){
+ .vintage-home .closing-section{padding:65px 7%;min-height:780px;align-items:flex-end}
+ .closing-photo img{object-position:58% center}
+ .closing-overlay{background:linear-gradient(0deg,rgba(0,0,0,.94) 0%,rgba(0,0,0,.85) 38%,rgba(0,0,0,.64) 70%,rgba(0,0,0,.42) 100%)}
+ .vintage-home .closing-section h2{font-size:clamp(36px,8.7vw,48px);line-height:1.12;margin-bottom:23px}
+ .vintage-home .closing-section .overline{font-size:11px;margin-bottom:22px}
+ .closing-description{font-size:15px;line-height:1.85}.closing-benefits{display:grid;gap:10px;margin:23px 0 28px}.closing-benefits li{font-size:13px}
+ .closing-actions{display:grid;grid-template-columns:1fr;gap:13px;padding-right:40px}
+ .closing-actions .v-button,.closing-secondary{width:100%;justify-content:space-between;min-height:50px;font-size:12px;padding:14px 16px;gap:12px}
+ .closing-signin{margin-top:24px;font-size:13px;padding-right:35px}.closing-signin a{line-height:1.7}
+ .closing-reassurance{font-size:12px;padding-right:25px;margin-top:18px}
+}
+@media(prefers-reduced-motion:reduce){.closing-secondary{transition:none}}

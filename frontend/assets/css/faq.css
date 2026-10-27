@@ -1,0 +1,39 @@
+.vintage-home .faq-section{max-width:none;display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.25fr);gap:clamp(36px,6vw,90px);padding:100px 8%;background:#14171b}
+.faq-intro .overline{margin-bottom:22px}.faq-intro h2{font-size:clamp(38px,3.7vw,56px)}
+.faq-description{font-size:16px;line-height:1.85;color:#bbc5d2;margin-top:26px;max-width:460px}
+.faq-guide{margin-top:35px;padding:28px;border:1px solid #71819955;background:#1b2027}
+.faq-guide-kicker{font-size:10px;font-weight:600;letter-spacing:.12em;color:#aebed2;margin-bottom:16px}
+.faq-guide h3{font-size:27px;line-height:1.2}.faq-guide ol{list-style:none;margin:24px 0;padding:0;display:grid;gap:17px}
+.faq-guide li{display:flex;align-items:baseline;gap:13px;font-size:14px;line-height:1.6;color:#d9e0e9}
+.faq-guide li span{font-size:11px;color:#99b0cd;font-variant-numeric:tabular-nums}
+.faq-guide .v-button{width:100%;justify-content:space-between;font-size:12px;gap:16px}
+.faq-guide>p:last-child{font-size:12px;line-height:1.7;color:#aeb8c5;margin-top:15px}
+.faq-topics{display:flex;flex-wrap:wrap;gap:9px}.faq-topics[hidden]{display:none}
+.faq-topics button{min-height:44px;padding:10px 15px;border:1px solid #7b8fa65c;color:#c9d3df;background:transparent;font:500 13px 'DM Sans',sans-serif;line-height:1.5;transition:background .2s,border-color .2s}
+.faq-topics button:hover{background:#29313b;border-color:#9aaec8}
+.faq-topics button[aria-pressed="true"]{background:#d0d8e3;border-color:#d0d8e3;color:#171b21}
+.faq-count{font-size:12px;line-height:1.6;color:#aab6c5;margin:18px 0 22px}
+.faq-answers .faq-list{margin:0;border-top:1px solid #73859c55}
+.faq-answers .faq-list details{border-bottom:1px solid #73859c55;background:transparent}
+.faq-answers .faq-list details[hidden]{display:none}
+.faq-answers .faq-list details[open]{background:#212831}
+.faq-answers .faq-list summary{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 18px;min-height:78px;cursor:pointer;list-style:none}
+.faq-answers .faq-list summary:hover{background:#26303b66}
+.faq-answers .faq-list summary .faq-question{font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;line-height:1.65;color:#eef1f5;transform:none}
+.faq-answers .faq-list summary .faq-plus{width:28px;height:28px;flex-shrink:0;display:grid;place-items:center;border:1px solid #7b91ac77;border-radius:50%;color:#bdcfe5;font:400 22px Georgia,serif;line-height:1;transition:transform .2s}
+.faq-answers .faq-list details[open] summary .faq-plus{transform:rotate(45deg)}
+.faq-answers .faq-answer{padding:0 18px 24px}
+.faq-answers .faq-answer p{margin:0;padding:0;font-size:15px;line-height:1.9;color:#c0cbd9;max-width:none}
+.faq-answer>a{display:inline-flex;align-items:center;gap:16px;min-height:44px;margin-top:14px;font-size:13px;line-height:1.6;color:#d7e5f7;border-bottom:1px solid #7894b777}
+.faq-answer>a:hover{color:#fff;border-color:#d7e5f7}
+.faq-help{display:flex;gap:16px;align-items:flex-start;margin-top:28px;padding:22px 0}
+.faq-help-symbol{display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border:1px solid #7b91ac77;border-radius:50%;color:#bdcfe5;font:italic 22px Georgia,serif}
+.faq-help h3{font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.4;letter-spacing:0;font-weight:500;margin-bottom:8px}
+.faq-help p{color:#aab7c8;font-size:13px;line-height:1.8;max-width:430px}
+@media(max-width:1000px){.vintage-home .faq-section{padding-inline:6%;gap:32px;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr)}.faq-guide{padding:22px}.faq-topics button{padding-inline:12px;font-size:12px}}
+@media(max-width:760px){.vintage-home .faq-section{grid-template-columns:1fr;padding:64px 7%;gap:34px}.faq-intro h2{font-size:38px}.faq-description{font-size:15px;margin-top:22px}.faq-guide{margin-top:26px;padding:24px}.faq-guide h3{font-size:26px}.faq-guide ol{gap:12px;margin:20px 0}.faq-topics{gap:8px}.faq-topics button{font-size:12px;padding:10px 14px}.faq-count{margin:16px 0 20px}.faq-answers .faq-list summary{padding:20px 12px;gap:14px;min-height:72px}.faq-answers .faq-list summary .faq-question{font-size:15px;line-height:1.65}.faq-answers .faq-answer{padding:0 12px 24px}.faq-answers .faq-answer p{font-size:14px;line-height:1.85}.faq-answer>a{font-size:12px}.faq-help{padding-right:36px}.faq-help p{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.faq-topics button,.faq-plus{transition:none!important}}
+/* Keep the source order identical to the mobile reading and keyboard order. */
+.vintage-home .faq-section{grid-template-areas:"intro answers" "guide answers";grid-template-rows:auto 1fr;row-gap:32px;align-items:start}
+.faq-intro{grid-area:intro}.faq-answers{grid-area:answers}.faq-guide{grid-area:guide;margin-top:0}
+@media(max-width:760px){.vintage-home .faq-section{display:flex;flex-direction:column;gap:30px}.faq-intro{display:block}.faq-guide{width:100%;margin:0}.faq-answers{width:100%}}

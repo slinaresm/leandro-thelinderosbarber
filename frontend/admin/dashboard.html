@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Administrador — Barber Linderos</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+  .app-shell { display: flex; min-height: 100vh; }
+  .sidebar { width: 250px; flex-shrink: 0; border-right: 1px solid var(--border); padding: 28px 20px; display: flex; flex-direction: column; }
+  .sidebar .logo { font-family: var(--font-display); font-weight: 700; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .logo span { color: var(--gold-bright); }
+  .sidebar .logo img { height: 40px; width: auto; display: block; border-radius: 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius-sm); color: var(--text-muted); font-size: 0.92rem; font-weight: 500; margin-bottom: 4px; transition: all 0.2s; }
+  .nav-item:hover { background: var(--bg-elevated); color: var(--text); }
+  .nav-item.active { background: rgba(200, 32, 46,0.1); color: var(--gold-bright); }
+  .sidebar-foot { margin-top: auto; }
+
+  .main { flex: 1; padding: 40px 48px; max-width: 1160px; }
+  .page-head { margin-bottom: 36px; }
+  .page-head h1 { font-size: 1.7rem; }
+  .page-head p { color: var(--text-muted); margin-top: 6px; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 40px; }
+  .stat-box { padding: 20px; }
+  .stat-box .num { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; }
+  .stat-box .label { color: var(--text-muted); font-size: 0.78rem; margin-top: 6px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+  tr:last-child td { border-bottom: none; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .segment-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .segment-box { padding: 20px; text-align: center; }
+  .segment-box .num { font-family: var(--font-display); font-size: 1.8rem; font-weight: 700; color: var(--gold-bright); }
+  .segment-box .label { color: var(--text-muted); font-size: 0.8rem; margin-top: 4px; }
+  .mini-input { width: 90px; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 6px 8px; font-size: 0.85rem; }
+  .thumb-sm { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
+
+  @media (max-width: 1000px) {
+    .app-shell { flex-direction: column; }
+    .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 16px; gap: 4px; }
+    .sidebar .logo { display: none; }
+    .sidebar .nav-item { flex-shrink: 0; white-space: nowrap; }
+    .sidebar-foot { margin-top: 0; margin-left: auto; }
+    .main { padding: 24px 16px; }
+    .stat-row, .segment-grid { grid-template-columns: repeat(2, 1fr); }
+    .form-row { grid-template-columns: 1fr; }
+    table { display: block; overflow-x: auto; }
+    .page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
+  }
+</style>
+<link rel="stylesheet" href="/assets/css/brand.css">
+<link rel="icon" type="image/png" href="/assets/img/linderos-logo-v2.png">
+</head>
+<body data-no-whatsapp data-no-cart>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="logo"><img src="/assets/img/linderos-logo-v2.png" alt="Barber Linderos"></div>
+    <div class="nav-item active" data-panel="resumen">📊 Resumen</div>
+    <div class="nav-item" data-panel="agenda">📅 Agenda global</div>
+    <div class="nav-item" data-panel="barberos">✂️ Barberos</div>
+    <div class="nav-item" data-panel="clientes">👥 Clientes</div>
+    <div class="nav-item" data-panel="servicios">🧾 Servicios</div>
+    <div class="nav-item" data-panel="inventario">📦 Inventario</div>
+    <div class="nav-item" data-panel="tienda">🛍️ Tienda</div>
+    <div class="nav-item" data-panel="stock-costos">💰 Stock y costos</div>
+    <div class="nav-item" data-panel="pedidos">💳 Pedidos</div>
+    <div class="nav-item" data-panel="marketing">📢 Marketing</div>
+    <div class="sidebar-foot">
+      <button id="logout-btn" class="btn btn-outline btn-sm btn-block">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <h1 id="welcome-title">Panel del administrador</h1>
+      <p>Control total de Barber Linderos.</p>
+    </div>
+
+    <section class="panel active" id="panel-resumen">
+      <div class="stat-row">
+        <div class="card stat-box"><div class="num" id="stat-revenue">$0</div><div class="label">Ingresos totales</div></div>
+        <div class="card stat-box"><div class="num" id="stat-reservations">0</div><div class="label">Reservas activas</div></div>
+        <div class="card stat-box"><div class="num" id="stat-clients">0</div><div class="label">Clientes</div></div>
+        <div class="card stat-box"><div class="num" id="stat-barbers">0</div><div class="label">Barberos activos</div></div>
+        <div class="card stat-box"><div class="num" id="stat-cancelled">0</div><div class="label">Canceladas</div></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3 class="mb-16">Servicios más reservados</h3>
+          <table id="top-services-table"><thead><tr><th>Servicio</th><th>Reservas</th><th>Ingresos</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="card">
+          <h3 class="mb-16">Desempeño por barbero</h3>
+          <table id="barber-perf-table"><thead><tr><th>Barbero</th><th>Citas</th><th>Completadas</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-agenda">
+      <div class="card">
+        <table id="agenda-table"><thead><tr><th>Fecha</th><th>Hora</th><th>Barbero</th><th>Cliente</th><th>Servicio</th><th>Estado</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-barberos">
+      <div class="card mb-24">
+        <h3 class="mb-16">Agregar barbero</h3>
+        <form id="barber-form">
+          <div class="form-row">
+            <div class="field"><label>Nombre</label><input type="text" name="name" required></div>
+            <div class="field"><label>Especialidad</label><input type="text" name="specialty" placeholder="Fade, Clásico..."></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Email</label><input type="email" name="email" required></div>
+            <div class="field"><label>Contraseña temporal</label><input type="password" name="password" required minlength="12"></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Agregar barbero</button>
+        </form>
+      </div>
+      <div class="card">
+        <table id="barbers-table"><thead><tr><th>Nombre</th><th>Especialidad</th><th>Email</th><th>Estado</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-clientes">
+      <div class="card">
+        <table id="clients-table"><thead><tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Puntos</th><th>Nivel</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-servicios">
+      <div class="card mb-24">
+        <h3 class="mb-16">Agregar servicio</h3>
+        <form id="service-form">
+          <div class="form-row">
+            <div class="field"><label>Nombre</label><input type="text" name="name" required></div>
+            <div class="field"><label>Precio (CLP)</label><input type="number" name="price" required></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Duración (min)</label><input type="number" name="duration_minutes" required></div>
+            <div class="field"><label>Descripción</label><input type="text" name="description"></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Agregar servicio</button>
+        </form>
+      </div>
+      <div class="card">
+        <table id="services-table"><thead><tr><th>Servicio</th><th>Precio</th><th>Duración</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-inventario">
+      <div class="card mb-24">
+        <h3 class="mb-16">Agregar producto</h3>
+        <form id="inventory-form">
+          <div class="form-row">
+            <div class="field"><label>Producto</label><input type="text" name="product_name" required></div>
+            <div class="field"><label>Cantidad inicial</label><input type="number" name="quantity" value="10"></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Agregar producto</button>
+        </form>
+      </div>
+      <div class="card">
+        <table id="inventory-table"><thead><tr><th>Producto</th><th>Stock</th><th>Solicitudes</th><th>Acción</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-tienda">
+      <div class="card mb-24">
+        <h3 class="mb-16">Agregar producto a la tienda</h3>
+        <form id="product-form">
+          <div class="form-row">
+            <div class="field"><label>Nombre</label><input type="text" name="name" required></div>
+            <div class="field"><label>Categoría</label><input type="text" name="category" placeholder="Barba, Cabello, Kits..."></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Precio (CLP)</label><input type="number" name="price" required></div>
+            <div class="field"><label>Stock inicial</label><input type="number" name="stock" value="0"></div>
+          </div>
+          <div class="field"><label>Descripción</label><input type="text" name="description"></div>
+          <div class="field"><label>Foto del producto</label><input type="file" name="image" accept="image/jpeg,image/png,image/webp"></div>
+          <button type="submit" class="btn btn-primary btn-sm">Agregar producto</button>
+        </form>
+      </div>
+      <div class="card">
+        <table id="products-table"><thead><tr><th>Foto</th><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-stock-costos">
+      <div class="stat-row" id="inventory-summary-boxes" style="grid-template-columns: repeat(4, 1fr);"></div>
+
+      <div class="card mb-24">
+        <h3 class="mb-8">Registrar compra desde factura</h3>
+        <p class="text-muted mb-16" style="font-size:0.88rem;">Sube una foto o PDF de la factura de tu proveedor. La IA detecta los productos, cantidades y costos — tú revisas y confirmas antes de que se actualice el stock real.</p>
+        <div class="field">
+          <label>Factura (JPG, PNG o PDF)</label>
+          <input type="file" id="invoice-file-input" accept="image/jpeg,image/png,image/webp,application/pdf">
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" id="extract-invoice-btn">Leer factura con IA</button>
+        <div id="invoice-review-wrap" style="display:none; margin-top:24px;">
+          <div class="form-row mb-16">
+            <div class="field"><label>Proveedor</label><input type="text" id="purchase-supplier"></div>
+            <div class="field"><label>N° Factura</label><input type="text" id="purchase-invoice-number"></div>
+          </div>
+          <table id="invoice-review-table">
+            <thead><tr><th>Detectado</th><th>Producto en tienda</th><th>Cantidad</th><th>Costo unitario</th></tr></thead>
+            <tbody></tbody>
+          </table>
+          <button type="button" class="btn btn-primary btn-sm mt-16" id="confirm-purchase-btn">Confirmar compra y actualizar stock</button>
+        </div>
+      </div>
+
+      <div class="card mb-24">
+        <h3 class="mb-16">Precio de compra y margen por producto</h3>
+        <table id="cost-table"><thead><tr><th>Producto</th><th>Costo compra</th><th>Precio venta</th><th>Margen</th><th>Stock</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div class="card">
+        <h3 class="mb-16">Historial de compras</h3>
+        <table id="purchases-table"><thead><tr><th>Fecha</th><th>Proveedor</th><th>N° Factura</th><th>Items</th><th>Costo total</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-pedidos">
+      <div class="card">
+        <table id="orders-table"><thead><tr><th>N° Orden</th><th>Cliente</th><th>Total</th><th>Estado</th><th>Fecha</th><th></th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-marketing">
+      <div class="segment-grid" id="segment-boxes"></div>
+      <div class="card mb-24">
+        <h3 class="mb-16">Crear promoción</h3>
+        <form id="promo-form">
+          <div class="field"><label>Título</label><input type="text" name="title" required></div>
+          <div class="field"><label>Descripción</label><input type="text" name="description"></div>
+          <div class="field">
+            <label>Segmento</label>
+            <select name="segment">
+              <option value="todos">Todos</option>
+              <option value="nuevos">Nuevos</option>
+              <option value="recurrentes">Recurrentes</option>
+              <option value="inactivos">Inactivos</option>
+              <option value="vip">VIP</option>
+              <option value="cumpleanos">Cumpleaños</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Crear promoción</button>
+        </form>
+      </div>
+      <div class="card">
+        <table id="promotions-table"><thead><tr><th>Título</th><th>Segmento</th><th>Estado</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script>
+(async () => {
+  const user = Auth.requireRole('admin', '/ingresar');
+  if (!user) return;
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await Auth.clearSession();
+    window.location.href = '/ingresar';
+  });
+
+  document.querySelectorAll('.nav-item[data-panel]').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById(`panel-${item.dataset.panel}`).classList.add('active');
+    });
+  });
+
+  const socket = io(API_BASE_URL.replace('/api', ''), { auth: { token: Auth.getToken() } });
+  socket.on('reservation:created', () => { loadOverview(); loadAgenda(); });
+  socket.on('reservation:cancelled', () => { loadOverview(); loadAgenda(); });
+  socket.on('reservation:completed', () => { loadOverview(); });
+  socket.on('order:paid', () => { loadOrders(); loadProducts(); showToast('¡Nuevo pago recibido en la tienda!', 'success'); });
+  socket.on('order:failed', () => { loadOrders(); });
+
+  function money(n) { return `$${Number(n).toLocaleString('es-CL')}`; }
+
+  async function loadOverview() {
+    const d = await apiRequest('/analytics/overview');
+    document.getElementById('stat-revenue').textContent = money(d.totalRevenue);
+    document.getElementById('stat-reservations').textContent = d.totalReservations;
+    document.getElementById('stat-clients').textContent = d.totalClients;
+    document.getElementById('stat-barbers').textContent = d.totalBarbers;
+    document.getElementById('stat-cancelled').textContent = d.cancelledCount;
+
+    document.querySelector('#top-services-table tbody').innerHTML = d.topServices.map(s => `
+      <tr><td>${s.name}</td><td>${s.bookings}</td><td>${money(s.revenue)}</td></tr>
+    `).join('') || '<tr><td colspan="3" class="text-muted">Sin datos aún.</td></tr>';
+
+    document.querySelector('#barber-perf-table tbody').innerHTML = d.barberPerformance.map(b => `
+      <tr><td>${b.barber_name}</td><td>${b.total_citas}</td><td>${b.completadas}</td></tr>
+    `).join('') || '<tr><td colspan="3" class="text-muted">Sin datos aún.</td></tr>';
+  }
+
+  async function loadAgenda() {
+    const { reservations } = await apiRequest('/reservations');
+    document.querySelector('#agenda-table tbody').innerHTML = reservations.slice(0, 60).map(r => `
+      <tr>
+        <td>${r.date}</td><td>${r.start_time}</td><td>${r.barber_name}</td><td>${r.client_name}</td>
+        <td>${r.service_name}</td>
+        <td><span class="badge ${r.status === 'confirmed' ? 'badge-success' : r.status === 'cancelled' ? 'badge-danger' : 'badge-muted'}">${r.status}</span></td>
+      </tr>
+    `).join('') || '<tr><td colspan="6" class="text-muted">Sin reservas.</td></tr>';
+  }
+
+  async function loadBarbers() {
+    const { barbers } = await apiRequest('/barbers');
+    document.querySelector('#barbers-table tbody').innerHTML = barbers.map(b => `
+      <tr><td>${b.name}</td><td>${b.specialty || '—'}</td><td>${b.email}</td><td><span class="badge badge-success">Activo</span></td></tr>
+    `).join('');
+  }
+
+  document.getElementById('barber-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(e.target);
+    try {
+      await apiRequest('/barbers', { method: 'POST', body: Object.fromEntries(f) });
+      showToast('Barbero agregado.', 'success');
+      e.target.reset();
+      loadBarbers();
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  async function loadClients() {
+    const { clients } = await apiRequest('/clients');
+    document.querySelector('#clients-table tbody').innerHTML = clients.map(c => `
+      <tr><td>${c.name}</td><td>${c.email}</td><td>${c.phone || '—'}</td><td>${c.loyalty_points}</td><td><span class="badge">${c.loyalty_level}</span></td></tr>
+    `).join('') || '<tr><td colspan="5" class="text-muted">Sin clientes aún.</td></tr>';
+  }
+
+  async function loadServices() {
+    const { services } = await apiRequest('/services', { auth: false });
+    document.querySelector('#services-table tbody').innerHTML = services.map(s => `
+      <tr><td>${s.name}</td><td>${money(s.price)}</td><td>${s.duration_minutes} min</td></tr>
+    `).join('');
+  }
+
+  document.getElementById('service-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    f.price = Number(f.price); f.duration_minutes = Number(f.duration_minutes);
+    try {
+      await apiRequest('/services', { method: 'POST', body: f });
+      showToast('Servicio agregado.', 'success');
+      e.target.reset();
+      loadServices();
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  async function loadInventory() {
+    const { items } = await apiRequest('/inventory');
+    document.querySelector('#inventory-table tbody').innerHTML = items.map(it => `
+      <tr>
+        <td>${it.product_name}</td>
+        <td>${it.quantity}</td>
+        <td>${it.request_status === 'pending' ? '<span class="badge">Pendiente</span>' : '—'}</td>
+        <td>
+          <button class="btn btn-outline btn-sm" data-restock="${it.id}">+10 stock</button>
+          ${it.request_status === 'pending' ? `<button class="btn btn-primary btn-sm" data-approve="${it.id}">Aprobar</button>` : ''}
+        </td>
+      </tr>
+    `).join('');
+
+    document.querySelectorAll('[data-restock]').forEach(btn => btn.addEventListener('click', async () => {
+      const current = items.find(i => i.id === btn.dataset.restock);
+      await apiRequest(`/inventory/${btn.dataset.restock}`, { method: 'PATCH', body: { quantity: current.quantity + 10, request_status: 'none' } });
+      showToast('Stock actualizado.', 'success');
+      loadInventory();
+    }));
+    document.querySelectorAll('[data-approve]').forEach(btn => btn.addEventListener('click', async () => {
+      await apiRequest(`/inventory/${btn.dataset.approve}`, { method: 'PATCH', body: { request_status: 'approved' } });
+      showToast('Solicitud aprobada.', 'success');
+      loadInventory();
+    }));
+  }
+
+  document.getElementById('inventory-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    f.quantity = Number(f.quantity);
+    try {
+      await apiRequest('/inventory', { method: 'POST', body: f });
+      showToast('Producto agregado.', 'success');
+      e.target.reset();
+      loadInventory();
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  async function loadProducts() {
+    const { products } = await apiRequest('/products/admin/all');
+    const imgBase = API_BASE_URL.replace('/api', '');
+    document.querySelector('#products-table tbody').innerHTML = products.map(p => `
+      <tr>
+        <td>${p.image_url ? `<img class="thumb-sm" src="${imgBase}${p.image_url}">` : '—'}</td>
+        <td>${p.name}</td>
+        <td>${p.category || '—'}</td>
+        <td><input type="number" class="mini-input" value="${p.price}" data-price="${p.id}"></td>
+        <td><input type="number" class="mini-input" value="${p.stock}" data-stock="${p.id}"></td>
+        <td><span class="badge ${p.active ? 'badge-success' : 'badge-muted'}">${p.active ? 'Activo' : 'Inactivo'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" data-save="${p.id}">Guardar</button>
+          <button class="btn btn-sm ${p.active ? 'btn-danger' : 'btn-primary'}" data-toggle="${p.id}">${p.active ? 'Desactivar' : 'Activar'}</button>
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="7" class="text-muted">Sin productos aún.</td></tr>';
+
+    document.querySelectorAll('[data-save]').forEach(btn => btn.addEventListener('click', async () => {
+      const id = btn.dataset.save;
+      const price = document.querySelector(`[data-price="${id}"]`).value;
+      const stock = document.querySelector(`[data-stock="${id}"]`).value;
+      try {
+        await apiRequest(`/products/${id}`, { method: 'PATCH', body: { price: Number(price), stock: Number(stock) } });
+        showToast('Producto actualizado.', 'success');
+        loadProducts();
+      } catch (err) { showToast(err.message, 'error'); }
+    }));
+    document.querySelectorAll('[data-toggle]').forEach(btn => btn.addEventListener('click', async () => {
+      const id = btn.dataset.toggle;
+      const product = products.find(p => p.id === id);
+      try {
+        if (product.active) {
+          await apiRequest(`/products/${id}`, { method: 'DELETE' });
+        } else {
+          await apiRequest(`/products/${id}`, { method: 'PATCH', body: { active: true } });
+        }
+        showToast('Estado actualizado.', 'success');
+        loadProducts();
+      } catch (err) { showToast(err.message, 'error'); }
+    }));
+  }
+
+  document.getElementById('product-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    try {
+      await apiRequest('/products', { method: 'POST', body: fd, isFormData: true });
+      showToast('Producto agregado a la tienda.', 'success');
+      e.target.reset();
+      loadProducts();
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  /* ---------- Stock y costos ---------- */
+  let allProductsCache = [];
+  let lastExtraction = null;
+
+  async function fetchAllProducts() {
+    const { products } = await apiRequest('/products/admin/all');
+    return products;
+  }
+
+  async function loadInventorySummary() {
+    const s = await apiRequest('/products/admin/inventory-summary');
+    document.getElementById('inventory-summary-boxes').innerHTML = `
+      <div class="card stat-box"><div class="num">${s.unitsInStock}</div><div class="label">Unidades en stock</div></div>
+      <div class="card stat-box"><div class="num">${money(s.stockValueCost)}</div><div class="label">Valor stock (costo)</div></div>
+      <div class="card stat-box"><div class="num">${money(s.stockValueRetail)}</div><div class="label">Valor stock (venta)</div></div>
+      <div class="card stat-box"><div class="num">${money(s.potentialProfit)}</div><div class="label">Ganancia potencial</div></div>
+    `;
+  }
+
+  function renderCostTable(products) {
+    document.querySelector('#cost-table tbody').innerHTML = products.map(p => {
+      const hasCost = p.cost_price !== null && p.cost_price !== undefined;
+      const margin = hasCost && p.price ? Math.round(((p.price - p.cost_price) / p.price) * 100) : null;
+      return `
+        <tr>
+          <td>${p.name}</td>
+          <td><input type="number" class="mini-input" value="${hasCost ? p.cost_price : ''}" placeholder="Sin costo" data-cost="${p.id}"></td>
+          <td>${money(p.price)}</td>
+          <td>${margin === null ? '—' : margin + '%'}</td>
+          <td>${p.stock}</td>
+          <td><button class="btn btn-outline btn-sm" data-save-cost="${p.id}">Guardar</button></td>
+        </tr>
+      `;
+    }).join('') || '<tr><td colspan="6" class="text-muted">Sin productos aún.</td></tr>';
+
+    document.querySelectorAll('[data-save-cost]').forEach(btn => btn.addEventListener('click', async () => {
+      const id = btn.dataset.saveCost;
+      const raw = document.querySelector(`[data-cost="${id}"]`).value;
+      if (raw === '') { showToast('Ingresa un costo de compra.', 'error'); return; }
+      try {
+        await apiRequest(`/products/${id}`, { method: 'PATCH', body: { cost_price: Number(raw) } });
+        showToast('Costo actualizado.', 'success');
+        await loadStockCostosTab();
+      } catch (err) { showToast(err.message, 'error'); }
+    }));
+  }
+
+  document.getElementById('extract-invoice-btn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('invoice-file-input');
+    if (!fileInput.files[0]) { showToast('Selecciona una foto o PDF de la factura primero.', 'error'); return; }
+    const btn = document.getElementById('extract-invoice-btn');
+    btn.disabled = true; btn.textContent = 'Leyendo factura...';
+    try {
+      const fd = new FormData();
+      fd.append('invoice', fileInput.files[0]);
+      const data = await apiRequest('/purchases/extract', { method: 'POST', body: fd, isFormData: true });
+      lastExtraction = data;
+      renderInvoiceReview(data);
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Leer factura con IA';
+    }
+  });
+
+  function renderInvoiceReview(data) {
+    document.getElementById('purchase-supplier').value = data.supplier || '';
+    document.getElementById('purchase-invoice-number').value = data.invoiceNumber || '';
+    document.getElementById('invoice-review-wrap').style.display = 'block';
+
+    document.querySelector('#invoice-review-table tbody').innerHTML = data.items.map((it, idx) => {
+      const lower = it.name.toLowerCase();
+      const guess = allProductsCache.find(p => p.name.toLowerCase().includes(lower) || lower.includes(p.name.toLowerCase()));
+      const options = allProductsCache.map(p => `<option value="${p.id}" ${guess && guess.id === p.id ? 'selected' : ''}>${p.name}</option>`).join('');
+      return `
+        <tr data-row="${idx}">
+          <td>${it.name}</td>
+          <td>
+            <select class="mini-input" style="width:200px;" data-match="${idx}">
+              <option value="">➕ Crear producto nuevo</option>
+              ${options}
+            </select>
+          </td>
+          <td><input type="number" class="mini-input" style="width:70px;" value="${it.quantity}" data-qty="${idx}"></td>
+          <td><input type="number" class="mini-input" style="width:90px;" value="${it.unitCost}" data-costval="${idx}"></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  document.getElementById('confirm-purchase-btn').addEventListener('click', async () => {
+    if (!lastExtraction) return;
+    const rows = document.querySelectorAll('#invoice-review-table tbody tr');
+    const items = Array.from(rows).map(row => {
+      const idx = row.dataset.row;
+      return {
+        productId: document.querySelector(`[data-match="${idx}"]`).value || null,
+        name: lastExtraction.items[idx].name,
+        quantity: Number(document.querySelector(`[data-qty="${idx}"]`).value),
+        unitCost: Number(document.querySelector(`[data-costval="${idx}"]`).value),
+      };
+    });
+
+    const btn = document.getElementById('confirm-purchase-btn');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    try {
+      await apiRequest('/purchases/confirm', {
+        method: 'POST',
+        body: {
+          supplier: document.getElementById('purchase-supplier').value,
+          invoiceNumber: document.getElementById('purchase-invoice-number').value,
+          invoiceFileUrl: lastExtraction.invoiceFileUrl,
+          items,
+        },
+      });
+      showToast('Compra registrada. Stock actualizado.', 'success');
+      document.getElementById('invoice-review-wrap').style.display = 'none';
+      document.getElementById('invoice-file-input').value = '';
+      lastExtraction = null;
+      await loadStockCostosTab();
+      loadProducts();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Confirmar compra y actualizar stock';
+    }
+  });
+
+  async function loadPurchasesHistory() {
+    const { purchases } = await apiRequest('/purchases');
+    document.querySelector('#purchases-table tbody').innerHTML = purchases.map(p => `
+      <tr>
+        <td>${new Date(p.created_at).toLocaleDateString('es-CL')}</td>
+        <td>${p.supplier || '—'}</td>
+        <td>${p.invoice_number || '—'}</td>
+        <td>${p.items.length}</td>
+        <td>${money(p.total_cost)}</td>
+      </tr>
+    `).join('') || '<tr><td colspan="5" class="text-muted">Sin compras registradas aún.</td></tr>';
+  }
+
+  async function loadStockCostosTab() {
+    allProductsCache = await fetchAllProducts();
+    renderCostTable(allProductsCache.filter(p => p.active));
+    await Promise.all([loadInventorySummary(), loadPurchasesHistory()]);
+  }
+
+  async function loadOrders() {
+    const { orders } = await apiRequest('/orders');
+    document.querySelector('#orders-table tbody').innerHTML = orders.map(o => `
+      <tr>
+        <td>${o.buy_order}</td>
+        <td>${o.client_name || '—'}</td>
+        <td>${money(o.total)}</td>
+        <td><span class="badge ${o.status === 'paid' ? 'badge-success' : (o.status === 'failed' || o.status === 'cancelled') ? 'badge-danger' : 'badge-muted'}">${o.status}</span></td>
+        <td>${new Date(o.created_at).toLocaleString('es-CL')}</td>
+        <td>
+          ${o.status === 'pending' ? `
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-primary btn-sm" data-order-paid="${o.id}">Marcar pagado</button>
+              <button class="btn btn-outline btn-sm" data-order-cancel="${o.id}">Cancelar</button>
+            </div>
+          ` : ''}
+        </td>
+      </tr>
+    `).join('') || '<tr><td colspan="6" class="text-muted">Sin pedidos aún.</td></tr>';
+
+    document.querySelectorAll('[data-order-paid]').forEach((btn) => btn.addEventListener('click', async () => {
+      try {
+        await apiRequest(`/orders/${btn.dataset.orderPaid}/status`, { method: 'PATCH', body: { status: 'paid' } });
+        showToast('Pedido marcado como pagado.', 'success');
+        loadOrders();
+        loadProducts();
+      } catch (err) { showToast(err.message, 'error'); }
+    }));
+    document.querySelectorAll('[data-order-cancel]').forEach((btn) => btn.addEventListener('click', async () => {
+      try {
+        await apiRequest(`/orders/${btn.dataset.orderCancel}/status`, { method: 'PATCH', body: { status: 'cancelled' } });
+        showToast('Pedido cancelado.', 'success');
+        loadOrders();
+      } catch (err) { showToast(err.message, 'error'); }
+    }));
+  }
+
+  async function loadMarketing() {
+    const { segments } = await apiRequest('/promotions/segments/counts');
+    document.getElementById('segment-boxes').innerHTML = `
+      <div class="card segment-box"><div class="num">${segments.nuevos}</div><div class="label">Nuevos (30 días)</div></div>
+      <div class="card segment-box"><div class="num">${segments.recurrentes}</div><div class="label">Recurrentes</div></div>
+      <div class="card segment-box"><div class="num">${segments.inactivos}</div><div class="label">Inactivos (60+ días)</div></div>
+      <div class="card segment-box"><div class="num">${segments.vip}</div><div class="label">VIP (Oro/Black)</div></div>
+    `;
+    const { promotions } = await apiRequest('/promotions');
+    document.querySelector('#promotions-table tbody').innerHTML = promotions.map(p => `
+      <tr><td>${p.title}</td><td>${p.segment}</td><td><span class="badge ${p.active ? 'badge-success' : 'badge-muted'}">${p.active ? 'Activa' : 'Inactiva'}</span></td></tr>
+    `).join('') || '<tr><td colspan="3" class="text-muted">Sin promociones aún.</td></tr>';
+  }
+
+  document.getElementById('promo-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = Object.fromEntries(new FormData(e.target));
+    try {
+      await apiRequest('/promotions', { method: 'POST', body: f });
+      showToast('Promoción creada.', 'success');
+      e.target.reset();
+      loadMarketing();
+    } catch (err) { showToast(err.message, 'error'); }
+  });
+
+  await Promise.all([loadOverview(), loadAgenda(), loadBarbers(), loadClients(), loadServices(), loadInventory(), loadProducts(), loadOrders(), loadMarketing(), loadStockCostosTab()]);
+})();
+</script>
+</body>
+</html>
+
+

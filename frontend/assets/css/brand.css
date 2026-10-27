@@ -1,0 +1,57 @@
+/* Shared logo: keep the supplied artwork intact and crop only its empty top margin. */
+.brand-logo,
+.logo img[src$="linderos-logo-v2.png"],
+.auth-logo img[src$="linderos-logo-v2.png"],
+.voucher-logo img[src$="linderos-logo-v2.png"] {
+  display:block;object-fit:cover;object-position:center bottom;
+  height:90px!important;width:140px!important;max-width:100%;border-radius:3px!important;
+}
+.masthead{height:120px}
+.masthead .wordmark{flex-shrink:0}
+.masthead .brand-logo{width:184px!important;height:108px!important}
+.v-footer .brand-logo{width:230px!important;height:145px!important}
+.auth-logo img[src$="linderos-logo-v2.png"]{width:230px!important;height:145px!important;margin-inline:auto}
+.sidebar .logo img[src$="linderos-logo-v2.png"]{width:170px!important;height:108px!important}
+.voucher-logo img[src$="linderos-logo-v2.png"]{margin-inline:auto}
+@media(max-width:1000px) and (min-width:761px){.masthead nav{gap:12px}.masthead .brand-logo{width:145px!important;height:92px!important}.masthead .nav-book{padding:14px}.masthead .nav-account{padding-left:12px}}
+@media(max-width:760px){
+  .masthead{height:100px}.masthead nav{top:99px;max-height:calc(100svh - 100px)}
+  .masthead .brand-logo{width:138px!important;height:88px!important}
+  .vintage-hero{padding-top:155px}
+  section[id],article[id]{scroll-margin-top:115px}
+  .logo img[src$="linderos-logo-v2.png"]{width:120px!important;height:78px!important}
+  .nav{gap:14px}.topbar{gap:14px;flex-wrap:wrap}
+}
+@media(min-width:761px){section[id],article[id]{scroll-margin-top:135px}}
+.shop-head{padding-top:185px}
+.breadcrumb{padding-top:175px}
+.filters-card{top:155px}
+@media(max-width:900px){.shop-head{padding-top:155px}.breadcrumb{padding-top:155px}}
+.option-card{color:var(--text)}
+
+/* Chrome, charcoal and the red/blue barber pole from the supplied logo. */
+:root{--brand-red:#a5293b;--brand-blue:#32658b;--brand-silver:#c4cbd4}
+::selection{background:#a5293b;color:#fff}
+.masthead{background:#121416f2;border-bottom-color:#69758366}
+.masthead::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:linear-gradient(90deg,#a5293b 0 33.333%,#cbd0d6 33.333% 66.666%,#32658b 66.666%)}
+.vintage-home .v-button{background:#a5293b;color:#fff;border:1px solid #bd4a5a}
+.vintage-home .v-button:hover{background:#bb3549;border-color:#d45a6d}
+.vintage-home h1 em,.vintage-home .closing-section h2 em{color:#d8dee6}
+.vintage-home .hero-photo{filter:saturate(.22) contrast(1.06)}
+.vintage-home .craft-interlude{background-image:linear-gradient(90deg,#121416ed,#12141680),url('../img/barber-vintage.png');background-blend-mode:saturation}
+.vintage-home .hero-seal{color:#d8dee6;border-color:#aeb9c888;outline-color:#aeb9c844}
+.vintage-home .ritual-progress a.active{background:#a5293b;border-color:#c25161;color:#fff}
+.vintage-home .ritual-step.is-current .step-number{color:#d0d9e6}
+.vintage-home .craft-strip i{color:#b44b5b}
+.vintage-home .service-arrow{color:#32658b}
+.vintage-home .v-service:hover .service-arrow{background:#32658b;border-color:#32658b;color:#fff}
+.vintage-home .barber-monogram{border-bottom:2px solid #32658b}
+.vintage-home .shop-emblem{background:radial-gradient(ellipse,#52607422,transparent 70%)}
+.vintage-home #bl-whatsapp-btn{background:#c4cbd4!important;color:#141517!important}
+.vintage-home #bl-assistant-fab{background:#263b50!important;border-color:#567796!important;color:#f0f2f5!important}
+.vintage-home #bl-cart-fab{background:#292d33!important;color:#e9ebee!important}
+.auth-wrap{background:radial-gradient(circle at 50% 0%,#32658b24,transparent 60%)}
+.btn-primary{background:#a5293b;color:#fff}
+.btn-primary:hover{background:#bb3549;color:#fff}
+.nav-item.active{background:#32658b22;color:#d5dce6}
+.option-card.selected{border-color:#8298b1;background:#32658b22}

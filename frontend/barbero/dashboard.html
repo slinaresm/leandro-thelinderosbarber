@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel Barbero — Barber Linderos</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<style>
+  .app-shell { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px; flex-shrink: 0; border-right: 1px solid var(--border);
+    padding: 28px 20px; display: flex; flex-direction: column;
+  }
+  .sidebar .logo { font-family: var(--font-display); font-weight: 700; margin-bottom: 40px; padding: 0 8px; }
+  .sidebar .logo span { color: var(--gold-bright); }
+  .sidebar .logo img { height: 40px; width: auto; display: block; border-radius: 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--radius-sm);
+    color: var(--text-muted); font-size: 0.92rem; font-weight: 500; margin-bottom: 4px; transition: all 0.2s;
+  }
+  .nav-item:hover { background: var(--bg-elevated); color: var(--text); }
+  .nav-item.active { background: rgba(200, 32, 46,0.1); color: var(--gold-bright); }
+  .sidebar-foot { margin-top: auto; }
+
+  .main { flex: 1; padding: 40px 48px; max-width: 1000px; }
+  .page-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; }
+  .page-head h1 { font-size: 1.7rem; }
+  .page-head p { color: var(--text-muted); margin-top: 6px; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 40px; }
+  .stat-box { padding: 24px; }
+  .stat-box .num { font-family: var(--font-display); font-size: 2rem; font-weight: 700; }
+  .stat-box .label { color: var(--text-muted); font-size: 0.82rem; margin-top: 6px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .agenda-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 18px 0; border-bottom: 1px solid var(--border);
+  }
+  .agenda-item:last-child { border-bottom: none; }
+  .agenda-time { font-family: var(--font-display); font-weight: 700; font-size: 1.1rem; min-width: 70px; }
+  .agenda-info h4 { font-size: 0.98rem; margin-bottom: 3px; }
+  .agenda-info .meta { color: var(--text-muted); font-size: 0.82rem; }
+  .agenda-actions { display: flex; gap: 8px; }
+
+  .client-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .client-row:last-child { border-bottom: none; }
+
+  .note-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .note-item:last-child { border-bottom: none; }
+  .note-item .meta { color: var(--text-faint); font-size: 0.75rem; margin-top: 4px; }
+
+  .inv-item { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--border); }
+  .inv-item:last-child { border-bottom: none; }
+  .inv-qty { font-family: var(--font-display); font-weight: 700; }
+  .inv-qty.low { color: var(--danger); }
+
+  .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; margin-top: 20px; }
+  .photo-card { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-elevated); }
+  .photo-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+  .photo-card .tag { padding: 8px 10px; font-size: 0.72rem; color: var(--text-muted); display: flex; justify-content: space-between; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  @media (max-width: 900px) {
+    .app-shell { flex-direction: column; }
+    .sidebar { width: 100%; flex-direction: row; overflow-x: auto; padding: 16px; gap: 4px; }
+    .sidebar .logo { display: none; }
+    .sidebar .nav-item { flex-shrink: 0; white-space: nowrap; }
+    .sidebar-foot { margin-top: 0; margin-left: auto; }
+    .main { padding: 24px 16px; }
+    .stat-row { grid-template-columns: 1fr; }
+    .form-row { grid-template-columns: 1fr; }
+
+    .agenda-item, .client-row, .inv-item { flex-direction: column; align-items: flex-start; gap: 12px; }
+    .agenda-item > div:first-child { width: 100%; }
+    .agenda-actions { width: 100%; }
+    .agenda-actions .btn { flex: 1; }
+    .inv-item > div:last-child { width: 100%; justify-content: space-between; }
+  }
+</style>
+<link rel="stylesheet" href="/assets/css/brand.css">
+<link rel="icon" type="image/png" href="/assets/img/linderos-logo-v2.png">
+</head>
+<body data-no-whatsapp>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="logo"><img src="/assets/img/linderos-logo-v2.png" alt="Barber Linderos"></div>
+    <div class="nav-item active" data-panel="agenda">📅 Mi agenda</div>
+    <div class="nav-item" data-panel="clientes">👥 Mis clientes</div>
+    <div class="nav-item" data-panel="fotos">📸 Fotos antes/después</div>
+    <div class="nav-item" data-panel="notas">📝 Notas</div>
+    <div class="nav-item" data-panel="materiales">📦 Materiales</div>
+    <div class="nav-item" data-panel="stats">📊 Mis estadísticas</div>
+    <div class="nav-item" data-panel="horario">🕐 Mi horario</div>
+    <div class="sidebar-foot">
+      <button id="logout-btn" class="btn btn-outline btn-sm btn-block">Cerrar sesión</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <div>
+        <h1 id="welcome-title">Hola 👋</h1>
+        <p>Tu agenda y tus clientes, sin distracciones.</p>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="card stat-box"><div class="num" id="stat-upcoming">0</div><div class="label">Citas próximas</div></div>
+      <div class="card stat-box"><div class="num" id="stat-completed">0</div><div class="label">Cortes completados</div></div>
+      <div class="card stat-box"><div class="num" id="stat-clients">0</div><div class="label">Clientes atendidos</div></div>
+    </div>
+
+    <section class="panel active" id="panel-agenda">
+      <div class="card" id="agenda-list">Cargando agenda...</div>
+    </section>
+
+    <section class="panel" id="panel-clientes">
+      <div class="card" id="clients-list">Cargando clientes...</div>
+    </section>
+
+    <section class="panel" id="panel-fotos">
+      <div class="card mb-24">
+        <h3 class="mb-16">Subir foto antes/después</h3>
+        <form id="photo-form">
+          <div class="field">
+            <label>Cliente</label>
+            <select id="photo-client-select" required></select>
+          </div>
+          <div class="field">
+            <label>Tipo</label>
+            <select name="type" required>
+              <option value="antes">Antes</option>
+              <option value="despues">Después</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Imagen</label>
+            <input type="file" name="photo" accept="image/jpeg,image/png,image/webp" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm" id="upload-photo-btn">Subir foto</button>
+        </form>
+      </div>
+      <div class="card">
+        <h3 class="mb-16">Galería del cliente seleccionado</h3>
+        <div class="photo-grid" id="photo-gallery"></div>
+      </div>
+    </section>
+
+    <section class="panel" id="panel-notas">
+      <div class="card mb-24">
+        <div class="field">
+          <label>Nueva nota interna</label>
+          <textarea id="note-input" rows="3" placeholder="Ej: cliente prefiere fade bajo, alérgico a cierto producto..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-sm" id="add-note-btn">Guardar nota</button>
+      </div>
+      <div class="card" id="notes-list">Cargando notas...</div>
+    </section>
+
+    <section class="panel" id="panel-materiales">
+      <div class="card" id="inventory-list">Cargando inventario...</div>
+    </section>
+
+    <section class="panel" id="panel-stats">
+      <div class="card" id="stats-detail">Cargando estadísticas...</div>
+    </section>
+
+    <section class="panel" id="panel-horario">
+      <div class="card">
+        <h3 class="mb-16">Horario de atención</h3>
+        <p class="text-muted mb-24">Define entre qué horas quieres que los clientes puedan reservarte hora. Debe estar dentro del horario general de la barbería (09:00–22:00).</p>
+        <div class="form-row">
+          <div class="field">
+            <label>Hora de apertura</label>
+            <select id="work-start-select"></select>
+          </div>
+          <div class="field">
+            <label>Hora de cierre</label>
+            <select id="work-end-select"></select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="save-schedule-btn">Guardar horario</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/assets/js/api.js"></script>
+<script>
+(async () => {
+  const user = Auth.requireRole('barbero', '/ingresar');
+  if (!user) return;
+
+  document.getElementById('welcome-title').textContent = `Hola, ${user.name.split(' ')[0]} 👋`;
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    await Auth.clearSession();
+    window.location.href = '/ingresar';
+  });
+
+  // ---- Navegación de tabs ----
+  document.querySelectorAll('.nav-item[data-panel]').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      item.classList.add('active');
+      document.getElementById(`panel-${item.dataset.panel}`).classList.add('active');
+      if (item.dataset.panel === 'fotos') loadPhotoGallery();
+    });
+  });
+
+  // ---- Socket.io: refresco en vivo cuando llega/cancela una cita ----
+  const socket = io(API_BASE_URL.replace('/api', ''), { auth: { token: Auth.getToken() } });
+  socket.on('reservation:created', () => loadAgenda());
+  socket.on('reservation:cancelled', () => loadAgenda());
+  socket.on('reservation:updated', () => loadAgenda());
+
+  let cachedClients = [];
+
+  async function loadAgenda() {
+    const { reservations } = await apiRequest('/reservations');
+    const upcoming = reservations.filter(r => r.status === 'confirmed');
+    document.getElementById('stat-upcoming').textContent = upcoming.length;
+    document.getElementById('stat-completed').textContent = reservations.filter(r => r.status === 'completed').length;
+
+    const list = document.getElementById('agenda-list');
+    list.innerHTML = upcoming.length ? upcoming
+      .sort((a, b) => (a.date + a.start_time).localeCompare(b.date + b.start_time))
+      .map(r => `
+        <div class="agenda-item">
+          <div style="display:flex; gap:18px; align-items:center;">
+            <div class="agenda-time">${r.start_time}</div>
+            <div class="agenda-info">
+              <h4>${r.service_name} — ${r.client_name}</h4>
+              <div class="meta">${r.date} · ${r.client_phone || 'sin teléfono'}</div>
+            </div>
+          </div>
+          <div class="agenda-actions">
+            <button class="btn btn-primary btn-sm" data-complete="${r.id}">Completar</button>
+            <button class="btn btn-outline btn-sm" data-cancel="${r.id}">Cancelar</button>
+          </div>
+        </div>
+      `).join('') : '<p class="text-muted">No tienes citas próximas.</p>';
+
+    list.querySelectorAll('[data-complete]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await apiRequest(`/reservations/${btn.dataset.complete}/complete`, { method: 'PATCH' });
+        showToast('Cita marcada como completada.', 'success');
+        loadAgenda();
+      });
+    });
+    list.querySelectorAll('[data-cancel]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('¿Cancelar esta cita?')) return;
+        await apiRequest(`/reservations/${btn.dataset.cancel}/cancel`, { method: 'PATCH' });
+        showToast('Cita cancelada.', 'success');
+        loadAgenda();
+      });
+    });
+  }
+
+  async function loadClients() {
+    const { clients } = await apiRequest(`/barbers/${user.barberId}/clients`);
+    cachedClients = clients;
+    document.getElementById('stat-clients').textContent = clients.length;
+    document.getElementById('clients-list').innerHTML = clients.length ? clients.map(c => `
+      <div class="client-row">
+        <div>
+          <h4>${c.name}</h4>
+          <div class="meta text-muted" style="font-size:0.82rem;">${c.email} · ${c.phone || 'sin teléfono'}</div>
+        </div>
+        <span class="badge">${c.loyalty_level}</span>
+      </div>
+    `).join('') : '<p class="text-muted">Aún no tienes clientes atendidos.</p>';
+
+    const select = document.getElementById('photo-client-select');
+    select.innerHTML = clients.map(c => `<option value="${c.id}">${c.name}</option>`).join('') ||
+      '<option value="">Sin clientes aún</option>';
+  }
+
+  async function loadPhotoGallery() {
+    const clientId = document.getElementById('photo-client-select').value;
+    const gallery = document.getElementById('photo-gallery');
+    if (!clientId) { gallery.innerHTML = '<p class="text-muted">Selecciona un cliente.</p>'; return; }
+
+    const { photos } = await apiRequest(`/photos?clientId=${clientId}`);
+    gallery.innerHTML = photos.length ? photos.map(p => `
+      <div class="photo-card">
+        <img src="${API_BASE_URL.replace('/api', '')}${p.photo_url}" alt="${p.type}">
+        <div class="tag"><span>${p.type === 'antes' ? 'Antes' : 'Después'}</span><span>${p.created_at.slice(0, 10)}</span></div>
+      </div>
+    `).join('') : '<p class="text-muted">Sin fotos para este cliente todavía.</p>';
+  }
+
+  document.getElementById('photo-client-select').addEventListener('change', loadPhotoGallery);
+
+  document.getElementById('photo-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const clientId = document.getElementById('photo-client-select').value;
+    if (!clientId) return showToast('Selecciona un cliente primero.', 'error');
+
+    const form = new FormData(e.target);
+    form.append('client_id', clientId);
+
+    const btn = document.getElementById('upload-photo-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+    try {
+      await apiRequest('/photos', { method: 'POST', body: form, isFormData: true });
+      showToast('Foto subida.', 'success');
+      e.target.reset();
+      loadPhotoGallery();
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Subir foto';
+    }
+  });
+
+  async function loadNotes() {
+    const { notes } = await apiRequest('/notes');
+    document.getElementById('notes-list').innerHTML = notes.length ? notes.map(n => `
+      <div class="note-item">
+        <div>${n.content}</div>
+        <div class="meta">${n.created_at}</div>
+      </div>
+    `).join('') : '<p class="text-muted">No tienes notas guardadas.</p>';
+  }
+
+  document.getElementById('add-note-btn').addEventListener('click', async () => {
+    const input = document.getElementById('note-input');
+    if (!input.value.trim()) return;
+    await apiRequest('/notes', { method: 'POST', body: { content: input.value.trim() } });
+    input.value = '';
+    showToast('Nota guardada.', 'success');
+    loadNotes();
+  });
+
+  async function loadInventory() {
+    const { items } = await apiRequest('/inventory');
+    document.getElementById('inventory-list').innerHTML = items.map(it => `
+      <div class="inv-item">
+        <div>
+          <h4>${it.product_name}</h4>
+          <div class="meta text-muted" style="font-size:0.82rem;">
+            ${it.request_status === 'pending' ? '<span class="badge">Solicitud pendiente</span>' : ''}
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div class="inv-qty ${it.quantity <= it.min_threshold ? 'low' : ''}">${it.quantity} u.</div>
+          <button class="btn btn-outline btn-sm" data-request="${it.id}" ${it.request_status === 'pending' ? 'disabled' : ''}>
+            ${it.request_status === 'pending' ? 'Solicitado' : 'Solicitar reposición'}
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    document.querySelectorAll('[data-request]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        await apiRequest(`/inventory/${btn.dataset.request}/request`, { method: 'POST' });
+        showToast('Solicitud de material enviada al administrador.', 'success');
+        loadInventory();
+      });
+    });
+  }
+
+  async function loadStats() {
+    const { stats } = await apiRequest(`/barbers/${user.barberId}/stats`);
+    document.getElementById('stats-detail').innerHTML = `
+      <div class="summary-row" style="display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border);">
+        <span class="text-muted">Cortes completados</span><span style="font-weight:600;">${stats.totalCompleted}</span>
+      </div>
+      <div class="summary-row" style="display:flex; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--border);">
+        <span class="text-muted">Citas próximas</span><span style="font-weight:600;">${stats.totalUpcoming}</span>
+      </div>
+      <div class="summary-row" style="display:flex; justify-content:space-between; padding:14px 0;">
+        <span class="text-muted">Clientes únicos atendidos</span><span style="font-weight:600;">${stats.uniqueClients}</span>
+      </div>
+    `;
+  }
+
+  function populateHourSelect(select) {
+    select.innerHTML = '';
+    for (let h = 9; h <= 22; h++) {
+      const value = `${String(h).padStart(2, '0')}:00`;
+      select.innerHTML += `<option value="${value}">${value}</option>`;
+    }
+  }
+
+  async function loadSchedule() {
+    const startSelect = document.getElementById('work-start-select');
+    const endSelect = document.getElementById('work-end-select');
+    populateHourSelect(startSelect);
+    populateHourSelect(endSelect);
+
+    const { barbers } = await apiRequest('/barbers', { auth: false });
+    const me = barbers.find(b => b.id === user.barberId);
+    startSelect.value = (me && me.work_start) || '10:00';
+    endSelect.value = (me && me.work_end) || '20:00';
+  }
+
+  document.getElementById('save-schedule-btn').addEventListener('click', async () => {
+    const work_start = document.getElementById('work-start-select').value;
+    const work_end = document.getElementById('work-end-select').value;
+    const btn = document.getElementById('save-schedule-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+    try {
+      await apiRequest(`/barbers/${user.barberId}`, { method: 'PATCH', body: { work_start, work_end } });
+      showToast('Horario actualizado.', 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Guardar horario';
+    }
+  });
+
+  await Promise.all([loadAgenda(), loadClients(), loadNotes(), loadInventory(), loadStats(), loadSchedule()]);
+})();
+</script>
+</body>
+</html>
+
+

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tienda — Barber Linderos</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/vintage-home.css">
+<style>
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 40px;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(to bottom, rgba(10,10,11,0.9), rgba(10,10,11,0.7));
+    border-bottom: 1px solid var(--border);
+  }
+  .nav .logo { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .nav .logo span { color: var(--gold-bright); }
+  .nav .logo img { height: 40px; width: auto; display: block; border-radius: 6px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a.link { font-size: 0.9rem; color: var(--text-muted); transition: color 0.25s; }
+  .nav-links a.link:hover { color: var(--text); }
+  .nav-toggle {
+    display: none; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--text); align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; padding: 0;
+  }
+
+  .shop-head { padding: 150px 0 40px; }
+  .shop-head .eyebrow {
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--gold-bright); font-weight: 600; margin-bottom: 14px; display: block;
+  }
+  .shop-head h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin-bottom: 10px; }
+  .shop-head p { color: var(--text-muted); }
+
+  .shop-layout { display: grid; grid-template-columns: 240px 1fr; gap: 40px; padding-bottom: 120px; align-items: start; }
+
+  .filters-card { position: sticky; top: 110px; padding: 24px; }
+  .filter-group { margin-bottom: 28px; }
+  .filter-group:last-child { margin-bottom: 0; }
+  .filter-group h4 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: 14px; }
+  .filter-option { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 0; font-size: 0.92rem; cursor: pointer; }
+  .filter-option input { accent-color: var(--gold); }
+  .filter-option .count { color: var(--text-faint); font-size: 0.8rem; }
+  .price-range { display: flex; gap: 10px; align-items: center; }
+  .price-range input { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 8px 10px; font-size: 0.85rem; }
+  .filter-clear { font-size: 0.82rem; color: var(--gold-bright); margin-top: 14px; display: inline-block; cursor: pointer; }
+
+  .shop-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+  .shop-toolbar .result-count { color: var(--text-muted); font-size: 0.9rem; }
+  .shop-toolbar select {
+    background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+    border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.88rem;
+  }
+
+  .products-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; min-height: 200px; }
+  .product-card {
+    display: flex; flex-direction: column; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--bg-card); overflow: hidden; transition: transform 0.3s var(--ease), border-color 0.3s var(--ease);
+  }
+  .product-card:hover { transform: translateY(-4px); border-color: var(--gold-dim); }
+  .product-thumb {
+    aspect-ratio: 1 / 1; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .product-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .product-thumb .no-photo { color: var(--text-faint); font-size: 0.85rem; }
+  .product-thumb .stock-flag {
+    position: absolute; top: 10px; left: 10px;
+  }
+  .product-body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
+  .product-body .category { color: var(--text-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .product-body h3 { font-size: 1.02rem; margin-bottom: 6px; }
+  .product-body .desc { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 14px; flex: 1; }
+  .product-body .price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .product-body .price { font-family: var(--font-display); font-size: 1.3rem; font-weight: 700; color: var(--gold-bright); }
+
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 80px 24px; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius); }
+
+  .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 48px; }
+  .page-btn {
+    width: 38px; height: 38px; border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--text-muted); display: flex; align-items: center; justify-content: center;
+    font-size: 0.88rem; transition: all 0.2s;
+  }
+  .page-btn:hover { border-color: var(--gold-dim); color: var(--text); }
+  .page-btn.active { background: var(--gold); border-color: var(--gold); color: #ffffff; font-weight: 700; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  @media (max-width: 900px) {
+    .shop-layout { grid-template-columns: 1fr; }
+    .filters-card { position: static; }
+    .products-grid { grid-template-columns: repeat(2, 1fr); }
+    .nav { padding: 16px 20px; }
+    .nav-toggle { display: flex; }
+    .shop-head { padding: 110px 0 32px; }
+
+    .nav-links {
+      position: fixed; top: 0; right: 0; bottom: 0; width: min(300px, 80vw);
+      background: var(--bg-elevated); border-left: 1px solid var(--border);
+      flex-direction: column; align-items: stretch; justify-content: flex-start;
+      padding: 90px 24px 24px; gap: 4px; overflow-y: auto;
+      transform: translateX(100%); transition: transform 0.35s var(--ease);
+      z-index: 200;
+    }
+    .nav-links.open { transform: translateX(0); }
+    .nav-links a.link {
+      display: block; padding: 14px 4px; border-bottom: 1px solid var(--border); font-size: 1rem;
+    }
+    .nav-links .btn { width: 100%; margin-top: 8px; }
+  }
+  @media (max-width: 560px) {
+    .products-grid { grid-template-columns: 1fr; }
+    .page-btn { width: 42px; height: 42px; }
+  }
+</style>
+<link rel="stylesheet" href="/assets/css/brand.css">
+<link rel="stylesheet" href="/assets/css/storefront.css?v=20261026-2">
+<link rel="icon" type="image/png" href="/assets/img/linderos-logo-v2.png">
+</head>
+<body class="vintage-store">
+<header class="masthead">
+  <a class="wordmark" href="/" aria-label="Barber Linderos, inicio"><img class="brand-logo" src="/assets/img/linderos-logo-v2.png" alt="The Linderos Barber" width="1235" height="848"></a>
+  <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="main-nav" aria-label="Abrir menú"><span></span><span></span></button>
+  <nav id="main-nav" aria-label="Navegación principal"><a href="/#ritual">El ritual</a><a href="/#servicios">Servicios</a><a href="/#barberos">Barberos</a><a class="is-active" href="/tienda" aria-current="page">La tienda</a><a class="nav-account" href="/ingresar">Mi cuenta</a><a class="nav-book" href="/reservar">Reservar hora <span>↗</span></a></nav>
+</header>
+
+<main>
+  <section class="storefront-hero" aria-labelledby="shop-title">
+    <div class="container storefront-hero__inner">
+      <p class="storefront-kicker">La tienda Linderos <span aria-hidden="true">✦</span> Cuidado masculino</p>
+      <h1 id="shop-title">El ritual sigue<br><em>en casa.</em></h1>
+      <p class="storefront-lede">Productos de barbería seleccionados para peinar, cuidar tu barba y mantener el acabado de tu corte entre visitas.</p>
+      <div class="storefront-promise" aria-label="Beneficios de la tienda">
+        <span>Selección del barbero</span><span>Pago seguro</span><span>Estilo todos los días</span>
+      </div>
+    </div>
+  </section>
+
+<div class="container storefront-content">
+  <div class="shop-head">
+    <span class="eyebrow">Tu selección</span>
+    <h2>Encuentra lo que necesita tu estilo.</h2>
+  </div>
+
+  <div class="shop-layout">
+    <aside class="filters-card card" aria-label="Filtros de productos">
+      <div class="filters-heading"><span>Refina tu búsqueda</span><i aria-hidden="true">✦</i></div>
+      <div class="filter-group">
+        <h4>Disponibilidad</h4>
+        <label class="filter-option">
+          <span><input type="checkbox" id="filter-in-stock"> En existencia</span>
+          <span class="count" id="count-in-stock">(0)</span>
+        </label>
+        <label class="filter-option">
+          <span><input type="checkbox" id="filter-out-stock"> Agotado</span>
+          <span class="count" id="count-out-stock">(0)</span>
+        </label>
+      </div>
+      <div class="filter-group">
+        <h4>Precio</h4>
+        <div class="price-range">
+          <input type="number" id="filter-min-price" placeholder="Mín">
+          <span class="text-faint">–</span>
+          <input type="number" id="filter-max-price" placeholder="Máx">
+        </div>
+        <span class="filter-clear" id="filter-clear">Limpiar filtros</span>
+      </div>
+    </aside>
+
+    <div class="catalogue-panel">
+      <div class="shop-toolbar">
+        <div class="result-count" id="result-count">Cargando productos...</div>
+        <label class="sort-control"><span>Ordenar por</span><select id="sort-select" aria-label="Ordenar productos">
+          <option value="relevancia">Más relevantes</option>
+          <option value="mas_vendidos">Más vendidos</option>
+          <option value="alfabetico_az">Alfabéticamente A-Z</option>
+          <option value="alfabetico_za">Alfabéticamente Z-A</option>
+          <option value="precio_asc">Precio: menor a mayor</option>
+          <option value="precio_desc">Precio: mayor a menor</option>
+          <option value="fecha_antiguo">Fecha: antiguo a reciente</option>
+          <option value="fecha_reciente">Fecha: reciente a antiguo</option>
+        </select></label>
+      </div>
+
+      <div class="products-grid" id="products-grid">
+        <div class="empty-state">Cargando catálogo...</div>
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+</div>
+</main>
+
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/cart.js"></script>
+<script src="/assets/js/assistant.js"></script>
+<script src="/assets/js/storefront.js"></script>
+<script src="/assets/js/site-nav.js"></script>
+<script>
+(async () => {
+  if (window.__storefrontLoaded) return;
+  const state = { page: 1, sort: 'relevancia', availability: null, minPrice: '', maxPrice: '' };
+  let productsCache = [];
+
+  function money(n) { return `$${Number(n).toLocaleString('es-CL')}`; }
+
+  function buildQuery() {
+    const params = new URLSearchParams();
+    params.set('page', state.page);
+    params.set('sort', state.sort);
+    if (state.availability) params.set('availability', state.availability);
+    if (state.minPrice) params.set('minPrice', state.minPrice);
+    if (state.maxPrice) params.set('maxPrice', state.maxPrice);
+    return params.toString();
+  }
+
+  function renderProducts(products) {
+    const grid = document.getElementById('products-grid');
+    if (!products.length) {
+      grid.innerHTML = '<div class="empty-state">No encontramos productos con estos filtros. Prueba ajustando la disponibilidad o el rango de precio.</div>';
+      return;
+    }
+    const imgBase = API_BASE_URL.replace('/api', '');
+    grid.innerHTML = products.map((p) => `
+      <div class="product-card">
+        <a href="/producto?id=${p.id}" class="product-thumb">
+          ${p.image_url ? `<img src="${p.image_url.startsWith('http') ? p.image_url : imgBase + p.image_url}" alt="${p.name}">` : '<span class="no-photo">Sin foto</span>'}
+          <span class="badge stock-flag ${p.stock > 0 ? 'badge-success' : 'badge-danger'}">${p.stock > 0 ? 'En existencia' : 'Agotado'}</span>
+        </a>
+        <div class="product-body">
+          <div class="category">${p.category || 'Barber Linderos'}</div>
+          <a href="/producto?id=${p.id}"><h3>${p.name}</h3></a>
+          <p class="desc">${p.description || ''}</p>
+          <div class="price-row">
+            <span class="price">${money(p.price)}</span>
+          </div>
+          <button class="btn ${p.stock > 0 ? 'btn-primary' : 'btn-outline'} btn-block btn-sm" ${p.stock > 0 ? `data-add="${p.id}"` : 'disabled'}>
+            ${p.stock > 0 ? 'Agregar al carrito' : 'Sin stock'}
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('[data-add]').forEach((btn) => btn.addEventListener('click', () => {
+      const product = productsCache.find((p) => p.id === btn.dataset.add);
+      if (product) {
+        Cart.addItem(product, 1);
+        showToast(`${product.name} agregado al carrito.`, 'success');
+      }
+    }));
+  }
+
+  function renderPagination(totalPages, page) {
+    const el = document.getElementById('pagination');
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+    let html = `<button class="page-btn" data-page="${page - 1}" ${page <= 1 ? 'disabled' : ''}>‹</button>`;
+    for (let i = 1; i <= totalPages; i++) {
+      html += `<button class="page-btn ${i === page ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    }
+    html += `<button class="page-btn" data-page="${page + 1}" ${page >= totalPages ? 'disabled' : ''}>›</button>`;
+    el.innerHTML = html;
+    el.querySelectorAll('.page-btn').forEach((btn) => btn.addEventListener('click', () => {
+      const p = parseInt(btn.dataset.page, 10);
+      if (p >= 1 && p <= totalPages) { state.page = p; load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    }));
+  }
+
+  async function load() {
+    document.getElementById('result-count').textContent = 'Cargando productos...';
+    try {
+      const data = await apiRequest(`/products?${buildQuery()}`, { auth: false });
+      productsCache = data.products;
+      renderProducts(data.products);
+      renderPagination(data.totalPages, data.page);
+      document.getElementById('result-count').textContent = `${data.total} producto${data.total === 1 ? '' : 's'}`;
+      document.getElementById('count-in-stock').textContent = `(${data.facets.inStockCount})`;
+      document.getElementById('count-out-stock').textContent = `(${data.facets.outOfStockCount})`;
+    } catch (err) {
+      document.getElementById('products-grid').innerHTML = `<div class="empty-state">No se pudo cargar el catálogo. ¿Está corriendo el backend?</div>`;
+      document.getElementById('result-count').textContent = '';
+    }
+  }
+
+  document.getElementById('sort-select').addEventListener('change', (e) => {
+    state.sort = e.target.value; state.page = 1; load();
+  });
+  document.getElementById('filter-in-stock').addEventListener('change', (e) => {
+    document.getElementById('filter-out-stock').checked = false;
+    state.availability = e.target.checked ? 'in_stock' : null;
+    state.page = 1; load();
+  });
+  document.getElementById('filter-out-stock').addEventListener('change', (e) => {
+    document.getElementById('filter-in-stock').checked = false;
+    state.availability = e.target.checked ? 'out_of_stock' : null;
+    state.page = 1; load();
+  });
+
+  let priceTimer;
+  function onPriceChange() {
+    clearTimeout(priceTimer);
+    priceTimer = setTimeout(() => {
+      state.minPrice = document.getElementById('filter-min-price').value;
+      state.maxPrice = document.getElementById('filter-max-price').value;
+      state.page = 1; load();
+    }, 450);
+  }
+  document.getElementById('filter-min-price').addEventListener('input', onPriceChange);
+  document.getElementById('filter-max-price').addEventListener('input', onPriceChange);
+
+  document.getElementById('filter-clear').addEventListener('click', () => {
+    state.availability = null; state.minPrice = ''; state.maxPrice = ''; state.sort = 'relevancia'; state.page = 1;
+    document.getElementById('filter-in-stock').checked = false;
+    document.getElementById('filter-out-stock').checked = false;
+    document.getElementById('filter-min-price').value = '';
+    document.getElementById('filter-max-price').value = '';
+    document.getElementById('sort-select').value = 'relevancia';
+    load();
+  });
+
+  await load();
+})();
+</script>
+</body>
+</html>
+
+

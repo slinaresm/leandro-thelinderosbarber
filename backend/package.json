@@ -1,0 +1,34 @@
+{
+  "name": "barber-linderos-backend",
+  "version": "0.3.0",
+  "description": "BARBER LINDEROS - Backend API (Node.js + Express + SQLite/Postgres + Socket.io)",
+  "main": "server.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node --test tests/security.test.js",
+    "seed": "node db/seed.js",
+    "migrate:postgres": "node scripts/migrate-postgres.js"
+  },
+  "dependencies": {
+    "@google/genai": "^2.13.0",
+    "bcryptjs": "^2.4.3",
+    "cookie": "^2.0.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "mercadopago": "^3.2.1",
+    "multer": "^2.2.0",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^10.2.1",
+    "pg": "^8.12.0",
+    "socket.io": "^4.7.5"
+  }
+}

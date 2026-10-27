@@ -1,0 +1,13 @@
+node_modules/
+node_modules_old_*/
+.env
+db/*.sqlite
+db/*.sqlite-journal
+db/*.sqlite-wal
+db/*.sqlite-shm
+uploads/haircuts/*
+!uploads/haircuts/.gitkeep
+uploads/products/*
+!uploads/products/.gitkeep
+uploads/invoices/*
+!uploads/invoices/.gitkeep

@@ -1,0 +1,29 @@
+.vintage-home .site-footer{display:block;padding:64px 8% 26px;background:#0e1115;border-top:1px solid #71819955}
+.footer-main{display:grid;grid-template-columns:1.1fr 1.25fr .9fr 1fr;gap:36px;align-items:start}
+.footer-brand .wordmark{margin-bottom:22px}.site-footer .footer-brand .brand-logo{width:190px!important;height:120px!important}
+.footer-brand p{font-size:14px;line-height:1.85;color:#aeb9c8;max-width:290px}
+.site-footer h2{font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;font-weight:600;letter-spacing:.015em;color:#eef1f5;margin:10px 0 20px}
+.footer-location address{font-style:normal;font-size:16px;line-height:1.8;color:#e0e6ee;max-width:270px}
+.footer-location>p{font-size:13px;line-height:1.8;color:#aeb9c8;margin:14px 0 19px}
+.footer-directions{display:flex;flex-wrap:wrap;gap:10px}
+.footer-directions a{display:inline-flex;align-items:center;justify-content:space-between;gap:13px;min-height:46px;padding:12px 14px;border:1px solid #7f96b060;color:#dbe5f2;font-size:12px;line-height:1.5;background:#202a36;transition:background .2s,border-color .2s}
+.footer-directions a:hover{background:#304157;border-color:#a6bdd8}
+.footer-external-note{display:block;margin-top:12px;font-size:11px;line-height:1.6;color:#98a8bc}
+.site-footer .footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:0;font-size:14px;margin:0}
+.site-footer .footer-column>a{display:inline-flex;align-items:center;min-height:44px;font-size:13px;line-height:1.7;color:#b7c5d6;padding:7px 0}
+.site-footer .footer-column>a:hover{color:#f4f6fa;text-decoration:underline;text-underline-offset:5px}
+.site-footer .footer-bottom{margin-top:44px;padding-top:24px;gap:24px;font-size:11px;line-height:1.7;color:#a6b5c8;border-top:1px solid #71819944;align-items:center;flex-wrap:wrap}
+.site-footer .footer-bottom>a{min-height:44px;display:inline-flex;align-items:center;font-size:12px;color:#c8d5e6}
+.policy-header{display:flex;justify-content:space-between;align-items:center;gap:20px;max-width:1120px;margin:auto;padding:20px 6%;border-bottom:1px solid #71819944}
+.policy-header .brand-logo{width:150px!important;height:96px!important}.policy-back{font-size:14px;min-height:44px;display:inline-flex;align-items:center;color:#c6d3e4}
+.policy-content{max-width:900px;margin:auto;padding:70px 6% 90px}
+.policy-page .policy-content h1{font-size:clamp(40px,6vw,64px);line-height:1.1;margin:0 0 25px}
+.policy-lead{font-size:17px;line-height:1.85;color:#c4cedb}.policy-date{font-size:12px;color:#9cabc0;margin-top:18px}
+.policy-index{display:flex;flex-wrap:wrap;gap:10px 18px;border-block:1px solid #71819944;padding:18px 0;margin-top:32px}
+.policy-index a{min-height:44px;display:inline-flex;align-items:center;font-size:13px;color:#c2d6ef}
+.policy-content section{margin-top:45px;scroll-margin-top:30px!important}.policy-content section h2{font-size:30px;line-height:1.25;margin-bottom:22px}
+.policy-content section p{font-size:16px;line-height:1.9;color:#c0cbd9;margin:16px 0}.policy-content section a{color:#d7e7fc;text-decoration:underline;text-underline-offset:4px;line-height:1.8}
+.policy-content section>a{display:inline-flex;align-items:center;min-height:44px;font-size:14px}
+@media(max-width:1100px){.footer-main{grid-template-columns:1fr 1.2fr;gap:38px 46px}.vintage-home .site-footer{padding-inline:6%}}
+@media(max-width:600px){.vintage-home .site-footer{padding:45px 7% 22px}.footer-main{grid-template-columns:1fr 1fr;gap:30px 22px}.footer-brand,.footer-location{grid-column:1/-1}.footer-brand p{max-width:100%}.site-footer h2{margin-bottom:13px;font-size:13px}.footer-location address{max-width:none;font-size:16px}.footer-location>p{max-width:300px}.site-footer .footer-column>a{font-size:12px}.site-footer .footer-column:last-child{padding-right:24px}.site-footer .footer-bottom{margin-top:30px;gap:14px;font-size:10px;padding-right:42px}.site-footer .footer-bottom>span{width:100%}.policy-header{padding:14px 7%}.policy-header .brand-logo{width:125px!important;height:82px!important}.policy-back{font-size:12px}.policy-content{padding:45px 7% 65px}.policy-lead{font-size:15px}.policy-content section p{font-size:15px}.policy-content section h2{font-size:27px}}
+@media(prefers-reduced-motion:reduce){.footer-directions a{transition:none}}

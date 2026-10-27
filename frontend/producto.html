@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Producto — Barber Linderos</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<style>
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 40px;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(to bottom, rgba(10,10,11,0.9), rgba(10,10,11,0.7));
+    border-bottom: 1px solid var(--border);
+  }
+  .nav .logo { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; letter-spacing: -0.02em; }
+  .nav .logo span { color: var(--gold-bright); }
+  .nav .logo img { height: 40px; width: auto; display: block; border-radius: 6px; }
+  .nav-links { display: flex; gap: 28px; align-items: center; }
+  .nav-links a.link { font-size: 0.9rem; color: var(--text-muted); transition: color 0.25s; }
+  .nav-links a.link:hover { color: var(--text); }
+  .nav-toggle {
+    display: none; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--text); align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; padding: 0;
+  }
+
+  .breadcrumb { padding: 150px 0 0; font-size: 0.85rem; color: var(--text-muted); }
+  .breadcrumb a:hover { color: var(--gold-bright); }
+
+  .product-view {
+    display: grid; grid-template-columns: minmax(0, 480px) 1fr; gap: 56px;
+    padding: 32px 0 100px; align-items: start;
+  }
+  .product-gallery {
+    aspect-ratio: 1 / 1; border-radius: var(--radius); overflow: hidden;
+    background: var(--bg-card); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .product-gallery img { width: 100%; height: 100%; object-fit: cover; }
+  .product-gallery .no-photo { color: var(--text-faint); font-size: 0.95rem; }
+
+  .product-info h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); margin-bottom: 18px; }
+  .product-info .price-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border);
+  }
+  .product-info .price { font-family: var(--font-display); font-size: 2rem; font-weight: 700; color: var(--gold-bright); }
+  .share-links { display: flex; gap: 10px; }
+  .share-links a {
+    width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center; color: var(--text-muted); transition: all 0.2s;
+  }
+  .share-links a:hover { border-color: var(--gold-dim); color: var(--gold-bright); }
+
+  .stock-status { margin-bottom: 24px; }
+
+  .buy-row { display: flex; gap: 12px; margin-bottom: 28px; }
+  .qty-input {
+    width: 76px; text-align: center; background: var(--bg-elevated); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius-sm); font-size: 1rem; font-family: inherit;
+    padding: 13px 8px;
+  }
+
+  .product-categories { padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.88rem; color: var(--text-muted); }
+  .product-categories .tag { color: var(--gold-bright); }
+
+  .desc-block { margin-top: 48px; }
+  .desc-block h3 {
+    display: inline-block; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em;
+    padding-bottom: 10px; border-bottom: 2px solid var(--gold); margin-bottom: 20px;
+  }
+  .desc-block p { color: var(--text-muted); line-height: 1.7; }
+
+  .not-found { text-align: center; padding: 220px 24px 120px; color: var(--text-muted); }
+
+  @media (max-width: 860px) {
+    .product-view { grid-template-columns: 1fr; padding-top: 16px; }
+    .nav { padding: 16px 20px; }
+    .nav-toggle { display: flex; }
+    .breadcrumb { padding-top: 130px; }
+
+    .nav-links {
+      position: fixed; top: 0; right: 0; bottom: 0; width: min(300px, 80vw);
+      background: var(--bg-elevated); border-left: 1px solid var(--border);
+      flex-direction: column; align-items: stretch; justify-content: flex-start;
+      padding: 90px 24px 24px; gap: 4px; overflow-y: auto;
+      transform: translateX(100%); transition: transform 0.35s var(--ease);
+      z-index: 200;
+    }
+    .nav-links.open { transform: translateX(0); }
+    .nav-links a.link {
+      display: block; padding: 14px 4px; border-bottom: 1px solid var(--border); font-size: 1rem;
+    }
+    .nav-links .btn { width: 100%; margin-top: 8px; }
+  }
+
+  @media (max-width: 480px) {
+    .buy-row { flex-wrap: wrap; }
+    .qty-input { width: 100%; }
+    #add-to-cart-btn { width: 100%; }
+  }
+</style>
+<link rel="stylesheet" href="/assets/css/brand.css">
+<link rel="icon" type="image/png" href="/assets/img/linderos-logo-v2.png">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/" class="logo"><img src="/assets/img/linderos-logo-v2.png" alt="Barber Linderos"></a>
+  <div class="nav-links">
+    <a href="/#servicios" class="link">Servicios</a>
+    <a href="/#barberos" class="link">Barberos</a>
+    <a href="/tienda" class="link">Tienda</a>
+    <a href="/ingresar" class="btn btn-outline btn-sm">Iniciar sesión</a>
+    <a href="/reservar" class="btn btn-primary btn-sm">Reservar ahora</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="breadcrumb" id="breadcrumb">
+    <a href="/tienda">Tienda</a> <span id="breadcrumb-name"></span>
+  </div>
+
+  <div id="product-root">
+    <div class="not-found">Cargando producto...</div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://unpkg.com/lenis@1.3.4/dist/lenis.min.js"></script>
+<script src="/assets/js/api.js"></script>
+<script src="/assets/js/cart.js"></script>
+<script src="/assets/js/assistant.js"></script>
+<script>
+(async () => {
+  function money(n) { return `$${Number(n).toLocaleString('es-CL')}`; }
+
+  const id = new URLSearchParams(window.location.search).get('id');
+  const root = document.getElementById('product-root');
+  if (!id) {
+    root.innerHTML = '<div class="not-found">Producto no especificado. <a href="/tienda" class="text-gold">Volver a la tienda</a></div>';
+    return;
+  }
+
+  let product;
+  try {
+    const data = await apiRequest(`/products/${id}`, { auth: false });
+    product = data.product;
+  } catch (err) {
+    root.innerHTML = `<div class="not-found">No pudimos encontrar este producto. <a href="/tienda" class="text-gold">Volver a la tienda</a></div>`;
+    return;
+  }
+
+  document.title = `${product.name} — Barber Linderos`;
+  document.getElementById('breadcrumb-name').textContent = `/ ${product.name}`;
+
+  const inStock = product.stock > 0;
+  const imgBase = API_BASE_URL.replace('/api', '');
+  const imgSrc = product.image_url ? (product.image_url.startsWith('http') ? product.image_url : imgBase + product.image_url) : null;
+
+  root.innerHTML = `
+    <div class="product-view">
+      <div class="product-gallery">
+        ${imgSrc ? `<img src="${imgSrc}" alt="${product.name}">` : '<span class="no-photo">Sin foto</span>'}
+      </div>
+      <div class="product-info">
+        <h1>${product.name}</h1>
+        <div class="price-row">
+          <span class="price">${money(product.price)}</span>
+          <div class="share-links">
+            <a id="share-fb" target="_blank" rel="noopener noreferrer" aria-label="Compartir en Facebook">f</a>
+            <a id="share-tw" target="_blank" rel="noopener noreferrer" aria-label="Compartir en Twitter">𝕏</a>
+          </div>
+        </div>
+
+        <div class="stock-status">
+          <span class="badge ${inStock ? 'badge-success' : 'badge-danger'}">${inStock ? `En existencia (${product.stock})` : 'Agotado'}</span>
+        </div>
+
+        <div class="buy-row">
+          <input type="number" class="qty-input" id="qty-input" value="1" min="1" max="${product.stock}" ${inStock ? '' : 'disabled'}>
+          <button class="btn btn-primary btn-block" id="add-to-cart-btn" ${inStock ? '' : 'disabled'}>
+            ${inStock ? 'Añadir al carro' : 'Sin stock'}
+          </button>
+        </div>
+
+        ${product.category ? `<div class="product-categories">Categoría: <a href="/tienda" class="tag">${product.category}</a></div>` : ''}
+
+        ${product.description ? `
+          <div class="desc-block">
+            <h3>Descripción</h3>
+            <p>${product.description}</p>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  const shareUrl = encodeURIComponent(window.location.href);
+  document.getElementById('share-fb').href = `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`;
+  document.getElementById('share-tw').href = `https://twitter.com/intent/tweet?url=${shareUrl}&text=${encodeURIComponent(product.name)}`;
+
+  const addBtn = document.getElementById('add-to-cart-btn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      const qty = Math.max(1, Math.min(parseInt(document.getElementById('qty-input').value, 10) || 1, product.stock));
+      Cart.addItem(product, qty);
+      showToast(`${product.name} agregado al carrito.`, 'success');
+    });
+  }
+})();
+</script>
+</body>
+</html>
+
+

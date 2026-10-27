@@ -1,0 +1,91 @@
+/* Readable type, consistent controls, and editorial service/photo sections. */
+.vintage-home{--floating-size:52px;--floating-right:max(20px,env(safe-area-inset-right));--floating-bottom:max(20px,env(safe-area-inset-bottom))}
+.masthead nav{gap:24px}
+.masthead nav a{font-size:13px;letter-spacing:.065em;min-height:44px;display:inline-flex;align-items:center}
+.masthead .nav-book{padding:14px 20px;gap:20px}
+.masthead .nav-account{padding-left:20px}
+.vintage-home .overline{font-size:12px;letter-spacing:.15em;line-height:1.6}
+.vintage-home h2{font-size:clamp(38px,3.9vw,60px);line-height:1.12}
+.vintage-home .v-button{min-height:50px;padding:16px 24px;font-size:13px;letter-spacing:.045em;gap:28px}
+.vintage-home .text-link{min-height:44px;font-size:14px;gap:18px;line-height:1.5}
+.vintage-home .cinema-panel h1{font-size:clamp(58px,6.4vw,96px);line-height:1.04}
+.vintage-home .cinema-panel h2{font-size:clamp(44px,5vw,76px)}
+.vintage-home .cinema-description{font-size:17px;line-height:1.75;max-width:460px}
+.vintage-home .cinema-controls{gap:12px}
+.vintage-home .cinema-controls a,.vintage-home .cinema-controls button{min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;font-size:12px;font-weight:500;line-height:1.4;letter-spacing:.025em;border-color:#b6c4d477;background:#101419c9}
+.vintage-home .cinema-controls button[hidden]{display:none}
+.vintage-home .cinema-bottom{font-size:10px;letter-spacing:.1em}
+.vintage-home #bl-whatsapp-btn,.vintage-home #bl-assistant-fab,.vintage-home #bl-cart-fab{width:var(--floating-size)!important;height:var(--floating-size)!important;left:auto!important;right:var(--floating-right)!important;border:1px solid #c4cbd466!important;box-shadow:0 4px 18px #0005}
+.vintage-home #bl-whatsapp-btn{bottom:var(--floating-bottom)!important}
+.vintage-home #bl-assistant-fab{bottom:calc(var(--floating-bottom) + 64px)!important}
+.vintage-home #bl-cart-fab{bottom:calc(var(--floating-bottom) + 128px)!important}
+.vintage-home #bl-whatsapp-btn svg,.vintage-home #bl-assistant-fab svg,.vintage-home #bl-cart-fab svg{width:26px;height:26px}
+.vintage-home #bl-assistant-panel{right:var(--floating-right)!important;bottom:calc(var(--floating-bottom) + 128px)!important}
+.services-section .section-top{display:grid;grid-template-columns:1.3fr 1fr;gap:60px;align-items:end;margin-bottom:46px}
+.services-section .section-top>p{font-size:16px;line-height:1.8;max-width:470px;color:#505964}
+.v-services{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;border:0;align-items:stretch}
+.v-service{display:flex;flex-direction:column;align-items:stretch;gap:0;padding:30px;background:#f8f9fa;border:1px solid #bcc3cc;border-top:3px solid #697b91;transition:border-color .25s,box-shadow .25s;min-width:0}
+.v-service:hover{border-color:#7b8da3;box-shadow:0 10px 25px #151c2610}
+.service-index{font-size:11px;letter-spacing:.12em;color:#606c7b;margin-bottom:26px}
+.v-service .service-info h3{font-size:31px;line-height:1.16;margin-bottom:18px}
+.v-service .service-info p{font-size:15px;line-height:1.8;color:#505964;margin:0}
+.service-meta{margin-top:auto;padding-top:32px;padding-bottom:24px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.service-meta .service-price{font-family:Georgia,serif;font-size:32px;line-height:1.2;color:#20242a;text-align:left}
+.service-duration{font-size:13px;color:#58616d;white-space:nowrap}
+.service-book{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:13px 16px;background:#a5293b;color:#fff;font-size:13px;font-weight:600;border:1px solid #a5293b;transition:background .25s}
+.service-book:hover{background:#842031;border-color:#842031}.service-book span{font-size:20px;line-height:1}
+.service-footnote{font-size:13px;line-height:1.7;color:#505964;margin-top:26px}
+.vintage-home .craft-interlude{display:grid;grid-template-columns:45% 55%;padding:0;min-height:640px;align-items:stretch;background:#181b20;background-image:none;background-blend-mode:normal;overflow:hidden}
+.craft-copy{padding:85px clamp(28px,4.4vw,76px);align-self:center}
+.craft-copy h2{font-size:clamp(36px,3.4vw,52px)}
+.vintage-home .craft-copy>p:not(.overline){font-size:16px;line-height:1.85;color:#bdc5cf;margin-top:25px;max-width:540px}
+.craft-copy .text-link{margin-top:24px;color:#e3e8ee}
+.craft-photo{display:block;min-width:0;min-height:100%;position:relative}
+.craft-photo img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:53% center}
+.v-barber p{font-size:14px;line-height:1.6}.v-barber>a{font-size:12px;min-height:44px;align-items:center}
+.shop-section p:not(.overline){font-size:16px}.faq-list summary{font-size:17px;min-height:60px}.faq-list details p{font-size:15px}
+.closing-account,.v-footer nav{font-size:14px}.v-footer nav a{min-height:44px;display:inline-flex;align-items:center}.footer-bottom{font-size:10px}
+@media(max-width:1200px){.masthead nav{gap:17px}.masthead nav a{font-size:12px}.masthead .brand-logo{width:160px!important;height:104px!important}.v-service{padding:24px}.v-service .service-info h3{font-size:28px}.service-meta{gap:8px}}
+@media(max-width:1050px){
+ .masthead{padding-inline:5%}.menu-toggle{display:flex;width:46px;height:46px;flex-direction:column;justify-content:center;gap:7px;background:none;border:1px solid #bcc4ce66;padding:12px;color:var(--paper)}.menu-toggle span{width:100%;height:1px;background:currentColor}
+ .masthead nav{display:none;position:absolute;top:119px;left:0;right:0;padding:24px 5%;background:#141517;flex-direction:column;align-items:stretch;gap:0;border-bottom:1px solid #bcc4ce66;max-height:calc(100svh - 120px);overflow:auto}
+ .masthead nav.open{display:flex}.masthead nav a{font-size:15px;padding:14px 0;min-height:48px}.masthead .nav-account{border:0;padding-left:0}.masthead .nav-book{margin-top:12px;padding:16px;justify-content:space-between}
+ .services-section .section-top{gap:30px}.v-services{gap:16px}.v-service{padding:22px 18px}.v-service .service-info h3{font-size:26px}
+ .vintage-home .craft-interlude{grid-template-columns:1fr 1fr}.craft-copy{padding:60px 30px}.craft-copy h2{font-size:38px}
+}
+@media(max-width:760px){
+ .vintage-home{--floating-size:46px;--floating-right:max(14px,env(safe-area-inset-right));--floating-bottom:max(14px,env(safe-area-inset-bottom))}
+ .masthead .brand-logo{width:138px!important;height:88px!important}.masthead nav{top:99px;max-height:calc(100svh - 100px)}
+ .vintage-home .overline{font-size:11px}.vintage-home h2{font-size:38px}.vintage-home .v-button{font-size:12px;min-height:48px;padding:14px 18px}.vintage-home .text-link{font-size:13px}
+ .vintage-home .cinema-panel h1{font-size:clamp(46px,10.8vw,64px)}.vintage-home .cinema-panel h2{font-size:clamp(35px,8.6vw,50px)}
+ .vintage-home .cinema-description{font-size:15px;line-height:1.7}.vintage-home .cinema-panel .overline{font-size:10px}.vintage-home .cinema-controls{gap:10px;left:5%;right:5%}
+ .vintage-home .cinema-controls a,.vintage-home .cinema-controls button{font-size:11px;padding:10px 12px;min-height:44px}
+ .cinema-enhanced .cinema-panel{bottom:100px}.cinema-panel .hero-actions{gap:12px;flex-wrap:wrap}.cinema-bottom{padding-right:48px}
+ .vintage-home #bl-assistant-fab{bottom:calc(var(--floating-bottom) + 56px)!important}.vintage-home #bl-cart-fab{bottom:calc(var(--floating-bottom) + 112px)!important}
+ .vintage-home #bl-assistant-panel{bottom:calc(var(--floating-bottom) + 112px)!important;right:14px!important;left:14px!important}
+ .services-section .section-top{grid-template-columns:1fr;gap:22px;margin-bottom:30px}.services-section .section-top>p{font-size:15px;margin:0;max-width:none}
+ .v-services{grid-template-columns:1fr;gap:20px}.v-service{padding:26px}.v-service .service-info h3{font-size:30px}.service-index{margin-bottom:20px}.service-meta{padding-top:26px}.service-footnote{font-size:12px;padding-right:36px}
+ .vintage-home .craft-interlude{grid-template-columns:1fr;min-height:0}.craft-photo{grid-row:1;min-height:0;aspect-ratio:4/3}.craft-photo img{object-position:52% center}.craft-copy{padding:48px 7% 60px}.craft-copy h2{font-size:38px}.vintage-home .craft-copy>p:not(.overline){font-size:15px}
+ .v-barber>a{font-size:10px}.faq-list summary{font-size:16px}.v-footer nav{gap:20px}
+}
+@media(max-height:600px){
+ .vintage-home .cinema-panel h1{font-size:32px}.vintage-home .cinema-panel h2{font-size:34px}.vintage-home .cinema-description{font-size:12px;line-height:1.5;margin-top:10px}
+ .vintage-home .cinema-panel .overline{font-size:9px}.cinema-panel .hero-actions{margin-top:12px}.vintage-home .cinema-panel .v-button{padding:10px 14px;min-height:44px;font-size:11px}.vintage-home .cinema-panel .text-link{font-size:11px}
+ .vintage-home .cinema-controls{left:auto;right:5%;top:135px;max-width:40%;flex-wrap:wrap;justify-content:end}.cinema-enhanced .cinema-panel{max-width:58%}
+}
+@media(prefers-reduced-motion:reduce){.v-service,.service-book{transition:none}}
+.cinema-panel .overline,.cinema-panel h1,.cinema-panel h2,.cinema-description{text-shadow:0 2px 14px #0008}
+@media(max-width:760px){.cinema-shade{background:linear-gradient(0deg,#080b10f2 0%,#080b10b0 60%,#080b1033 100%)}}
+/* A product still life accompanies the shop introduction without implying stock. */
+.vintage-home .shop-section{display:grid;grid-template-columns:1fr 1fr;gap:clamp(35px,6vw,88px);align-items:center;background:#1c2025;padding:100px 8%;border-block:1px solid #515b6944}
+.shop-visual{margin:0;min-width:0}.shop-visual picture{display:block;overflow:hidden;aspect-ratio:4/3;border:1px solid #65728455;background:#13161b}
+.shop-visual img{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
+.shop-visual figcaption{margin-top:14px;font-size:12px;line-height:1.6;color:#aeb8c5}
+.shop-copy{min-width:0}.shop-copy .overline{margin-bottom:22px}.shop-copy h2{font-size:clamp(36px,3.5vw,54px);line-height:1.12}
+.vintage-home .shop-copy p:not(.overline){font-size:16px;line-height:1.85;color:#c0c8d2;margin:24px 0 0}
+.shop-uses{display:flex;flex-wrap:wrap;gap:10px 18px;padding:23px 0;margin:26px 0;border-block:1px solid #76879e44;list-style:none}
+.shop-uses li{font-size:12px;line-height:1.6;color:#d8dee7;display:flex;align-items:center;gap:9px}.shop-uses li::before{content:'✦';font-size:10px;color:#a6b9d1}
+.shop-copy .v-button{max-width:100%;white-space:normal;line-height:1.5}.shop-note{display:block;font-size:12px;line-height:1.7;color:#aeb8c5;margin-top:16px}
+@media(max-width:1050px){.vintage-home .shop-section{gap:32px;padding-inline:6%}.shop-copy h2{font-size:38px}.vintage-home .shop-copy p:not(.overline){font-size:15px}.shop-uses{gap:10px 14px}.shop-visual picture{aspect-ratio:1/1}}
+@media(max-width:760px){.vintage-home .shop-section{grid-template-columns:1fr;padding:64px 7%;gap:36px}.shop-copy{grid-row:1}.shop-copy h2{font-size:38px}.shop-visual picture{aspect-ratio:4/3}.shop-visual figcaption{font-size:11px;padding-right:32px}.shop-copy .v-button{width:100%;justify-content:space-between}.shop-note{font-size:12px;padding-right:24px}}
+@media(max-width:360px){.shop-copy h2{font-size:34px}.shop-copy .v-button{font-size:11px;padding-inline:16px;gap:16px}}

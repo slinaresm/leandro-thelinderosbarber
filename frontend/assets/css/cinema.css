@@ -1,0 +1,73 @@
+/* Static content is the default; scroll-controlled video is progressive enhancement. */
+.vintage-home{overflow-x:clip}
+.cinema-story{position:relative;background:#101214;--film-progress:0}
+.cinema-stage{position:relative;isolation:isolate;overflow:hidden;background:#101214}
+.cinema-backdrop{position:absolute;inset:0;z-index:-3;background:#101214 url('../img/barber-film-poster.jpg') center/cover no-repeat}
+.cinema-backdrop video{width:100%;height:100%;object-fit:cover;object-position:56% center;display:block;opacity:0;transition:opacity .5s;filter:saturate(.65)}
+.cinema-ready .cinema-backdrop video{opacity:1}
+.cinema-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#080b10e8 0%,#080b10a6 32%,#080b1022 72%),linear-gradient(0deg,#101214dd,transparent 45%)}
+.cinema-copy{padding:175px 7% 100px}
+.cinema-panel{max-width:700px;padding-block:35px}
+.cinema-panel h1{font-size:clamp(64px,7.2vw,112px)}
+.cinema-panel h2{font-size:clamp(45px,5.4vw,82px)}
+.cinema-panel h1 em,.cinema-panel h2 em{color:#d8dee6}
+.cinema-description{font-size:15px;line-height:1.9;color:#d2d7df;margin-top:24px;max-width:430px}
+.cinema-controls{position:absolute;right:5%;top:145px;display:flex;gap:20px;z-index:5;align-items:center}
+.cinema-controls a,.cinema-controls button{font-family:inherit;font-size:9px;letter-spacing:.06em;color:#e1e6ed;background:#10141999;padding:10px 12px;border:1px solid #b6c4d455;backdrop-filter:blur(8px)}
+.cinema-controls button[hidden]{display:none}
+.cinema-controls a:hover,.cinema-controls button:hover{background:#303c4d}
+.cinema-bottom{position:absolute;bottom:30px;left:7%;right:7%;display:flex;justify-content:space-between;align-items:center;gap:20px;color:#d2d9e3;font-size:8px;letter-spacing:.16em}
+.cinema-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:#a8b6c133}
+.cinema-progress span{display:block;width:100%;height:100%;background:linear-gradient(90deg,#a5293b,#d5dae2,#32658b);transform-origin:left;transform:scaleX(var(--film-progress))}
+.cinema-marker{display:none}
+.cinema-instruction{display:none}
+.cinema-enhanced{height:600svh}
+.cinema-enhanced .cinema-stage{height:100svh;min-height:620px;position:sticky;top:0}
+.cinema-enhanced .cinema-copy{position:absolute;inset:0;padding:0}
+.cinema-enhanced .cinema-panel{position:absolute;left:7%;right:7%;top:50%;padding:0;transform:translateY(calc(-40% + 35px));opacity:0;visibility:hidden;pointer-events:none;transition:opacity .5s,transform .65s,visibility .5s;will-change:opacity,transform}
+.cinema-enhanced .cinema-panel.is-active{opacity:1;visibility:visible;transform:translateY(-40%);pointer-events:auto}
+.cinema-enhanced .cinema-instruction{display:inline}
+.cinema-enhanced .cinema-marker{display:block;position:absolute;top:var(--position);height:1px;width:1px;pointer-events:none;scroll-margin-top:0}
+.cinema-static .cinema-backdrop video{display:none}
+.cinema-static .cinema-panel{scroll-margin-top:140px;border-bottom:1px solid #a8b6c133}
+.cinema-static .cinema-panel:last-child{border-bottom:0}
+.cinema-static .cinema-bottom{display:none}
+@media(max-width:1000px){.cinema-panel h1{font-size:clamp(64px,8vw,95px)}.cinema-controls{right:5%;gap:10px}}
+@media(max-width:760px){
+ .cinema-copy{padding:165px 7% 60px}
+ .cinema-enhanced{height:500svh}
+ .cinema-enhanced .cinema-stage{min-height:580px}
+ .cinema-backdrop video{object-position:52% center}
+ .cinema-shade{background:linear-gradient(0deg,#080b10ed 0%,#080b10ad 25%,#080b1010 75%),linear-gradient(90deg,#080b1055,transparent)}
+ .cinema-controls{top:115px;left:7%;right:7%;justify-content:space-between;gap:10px}
+ .cinema-controls a,.cinema-controls button{font-size:8px;padding:9px}
+ .cinema-panel h1{font-size:clamp(46px,11vw,66px)}
+ .cinema-panel h2{font-size:clamp(38px,9vw,54px)}
+ .cinema-panel .overline{font-size:7px;margin-bottom:18px}
+ .cinema-description{font-size:12px;margin-top:18px;line-height:1.7}
+ .cinema-enhanced .cinema-panel{top:auto;bottom:100px;transform:translateY(25px)}
+ .cinema-enhanced .cinema-panel.is-active{transform:translateY(0)}
+ .cinema-panel .hero-actions{margin-top:24px;gap:15px}
+ .cinema-panel .v-button{padding:15px 18px;font-size:9px}
+ .cinema-panel .text-link{font-size:9px}
+ .cinema-bottom{bottom:35px;font-size:7px;right:7%;gap:10px}
+ .cinema-bottom .cinema-instruction{display:none}
+ .cinema-static .cinema-panel{scroll-margin-top:115px}
+}
+@media(prefers-reduced-motion:reduce){.cinema-panel,.cinema-backdrop video{transition:none!important;will-change:auto}}
+.cinema-loading .cinema-stage{min-height:100svh}
+.cinema-loading .cinema-panel:not(:first-child){display:none}
+@media(max-height:600px){
+ .cinema-enhanced .cinema-stage{min-height:100svh}
+ .cinema-enhanced .cinema-panel{top:auto;bottom:55px;transform:translateY(20px);max-width:60%}
+ .cinema-enhanced .cinema-panel.is-active{transform:translateY(0)}
+ .cinema-panel h1{font-size:32px;line-height:1.02;margin-bottom:12px}
+ .cinema-panel h2{font-size:34px}
+ .cinema-panel .overline{margin-bottom:10px;font-size:7px}
+ .cinema-description{font-size:10px;line-height:1.6;margin-top:10px}
+ .cinema-panel .hero-actions{margin-top:12px;gap:18px}
+ .cinema-panel .v-button{padding:12px 16px;font-size:8px}
+ .cinema-panel .text-link{font-size:8px}
+ .cinema-controls{left:auto;right:4%;gap:8px}
+ .cinema-bottom{bottom:20px}
+}
