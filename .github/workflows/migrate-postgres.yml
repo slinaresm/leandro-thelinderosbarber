@@ -1,0 +1,44 @@
+name: Migrar PostgreSQL de producción
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Escribe MIGRAR para aplicar las migraciones pendientes"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    if: inputs.confirmation == 'MIGRAR'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      NODE_ENV: production
+      DB_DRIVER: postgres
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PG_SSL: ${{ secrets.PG_SSL }}
+      SITE_ORIGIN: ${{ secrets.SITE_ORIGIN }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+    steps:
+      - name: Obtener versión aprobada
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalar dependencias de migración
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      - name: Aplicar migraciones versionadas
+        working-directory: backend
+        run: npm run migrate:postgres
+

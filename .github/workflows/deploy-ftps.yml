@@ -1,0 +1,66 @@
+name: Desplegar sitio por FTPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: "Escribe DESPLEGAR para confirmar la subida a producción"
+        required: true
+        type: string
+      scope:
+        description: "Qué publicar"
+        required: true
+        type: choice
+        default: all
+        options: [all, frontend, backend]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: inputs.confirmation == 'DESPLEGAR'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Obtener versión aprobada
+        uses: actions/checkout@v4
+
+      - name: Publicar frontend estático
+        if: inputs.scope == 'all' || inputs.scope == 'frontend'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTPS_SERVER }}
+          username: ${{ secrets.FTPS_USERNAME }}
+          password: ${{ secrets.FTPS_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTPS_PORT }}
+          local-dir: ./frontend/
+          server-dir: ${{ secrets.FTPS_FRONTEND_PATH }}/
+          exclude: |
+            **/.git*
+            **/.DS_Store
+
+      - name: Publicar backend Node.js
+        if: inputs.scope == 'all' || inputs.scope == 'backend'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTPS_SERVER }}
+          username: ${{ secrets.FTPS_USERNAME }}
+          password: ${{ secrets.FTPS_PASSWORD }}
+          protocol: ftps
+          port: ${{ secrets.FTPS_PORT }}
+          local-dir: ./backend/
+          server-dir: ${{ secrets.FTPS_BACKEND_PATH }}/
+          exclude: |
+            **/.git*
+            **/.env
+            **/node_modules/**
+            **/db/*.sqlite*
+            **/uploads/**
+            !uploads/**/.gitkeep
+
+      - name: Recordatorio operativo
+        run: |
+          echo "Archivos publicados por FTPS. En cPanel, reinicia manualmente la aplicación Node.js."
+
