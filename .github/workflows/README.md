@@ -8,12 +8,12 @@ activa revisión manual allí si quieres una segunda aprobación.
 
 ### Deploy FTPS
 
-- `FTPS_SERVER`: host FTP/FTPS entregado por cPanel.
-- `FTPS_USERNAME`: usuario FTP.
-- `FTPS_PASSWORD`: contraseña FTP.
-- `FTPS_PORT`: normalmente `21` para FTPS explícito.
-- `FTPS_FRONTEND_PATH`: directorio remoto del sitio público, por ejemplo `public_html`.
-- `FTPS_BACKEND_PATH`: directorio remoto de la aplicación Node.js, fuera de `public_html` cuando cPanel lo permita.
+- `FTPS_LB_SERVER`: host FTP/FTPS entregado por cPanel.
+- `FTPS_LB_USERNAME`: usuario FTP.
+- `FTPS_LB_PASSWORD`: contraseña FTP.
+- `FTPS_LB_PORT`: normalmente `21` para FTPS explícito.
+- `FTPS_LB_FRONTEND_PATH`: directorio remoto del sitio público, por ejemplo `public_html`.
+- `FTPS_LB_BACKEND_PATH`: directorio remoto de la aplicación Node.js, fuera de `public_html` cuando cPanel lo permita.
 
 ### Migraciones PostgreSQL
 

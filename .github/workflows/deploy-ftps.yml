@@ -30,13 +30,13 @@ jobs:
         if: inputs.scope == 'all' || inputs.scope == 'frontend'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTPS_SERVER }}
-          username: ${{ secrets.FTPS_USERNAME }}
-          password: ${{ secrets.FTPS_PASSWORD }}
+          server: ${{ secrets.FTPS_LB_SERVER }}
+          username: ${{ secrets.FTPS_LB_USERNAME }}
+          password: ${{ secrets.FTPS_LB_PASSWORD }}
           protocol: ftps
-          port: ${{ secrets.FTPS_PORT }}
+          port: ${{ secrets.FTPS_LB_PORT }}
           local-dir: ./frontend/
-          server-dir: ${{ secrets.FTPS_FRONTEND_PATH }}/
+          server-dir: ${{ secrets.FTPS_LB_FRONTEND_PATH }}/
           exclude: |
             **/.git*
             **/.DS_Store
@@ -45,13 +45,13 @@ jobs:
         if: inputs.scope == 'all' || inputs.scope == 'backend'
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTPS_SERVER }}
-          username: ${{ secrets.FTPS_USERNAME }}
-          password: ${{ secrets.FTPS_PASSWORD }}
+          server: ${{ secrets.FTPS_LB_SERVER }}
+          username: ${{ secrets.FTPS_LB_USERNAME }}
+          password: ${{ secrets.FTPS_LB_PASSWORD }}
           protocol: ftps
-          port: ${{ secrets.FTPS_PORT }}
+          port: ${{ secrets.FTPS_LB_PORT }}
           local-dir: ./backend/
-          server-dir: ${{ secrets.FTPS_BACKEND_PATH }}/
+          server-dir: ${{ secrets.FTPS_LB_BACKEND_PATH }}/
           exclude: |
             **/.git*
             **/.env
