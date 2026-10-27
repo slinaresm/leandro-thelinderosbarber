@@ -61,7 +61,9 @@ npm test
 Antes de publicar, usa HTTPS en el dominio final, define `NODE_ENV=production`,
 `SITE_ORIGIN=https://tu-dominio.cl` y un `JWT_SECRET` aleatorio de al menos 32
 caracteres. El servidor rechaza la configuración de producción si no se cumplen
-esas condiciones. No publiques cuentas de demostración ni sus contraseñas:
+esas condiciones o si no se usa PostgreSQL. Ejecuta `npm run migrate:postgres`
+en cada despliegue: las migraciones se registran en `schema_migrations` y no se
+repiten. No publiques cuentas de demostración ni sus contraseñas:
 elimínalas o reemplaza sus claves y configura las credenciales reales fuera de Git.
 
 ## Cómo correrlo con Postgres (producción)

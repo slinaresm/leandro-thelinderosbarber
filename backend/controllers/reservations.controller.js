@@ -70,7 +70,7 @@ async function createReservation(req, res) {
   const client = await db.prepare('SELECT id FROM clients WHERE user_id = ?').get(req.user.id);
   if (!client) return res.status(403).json({ error: 'Solo clientes pueden reservar.' });
 
-  const service = await db.prepare('SELECT duration_minutes FROM services WHERE id = ? AND active = 1').get(serviceId);
+  const service = await db.prepare('SELECT name, price, duration_minutes FROM services WHERE id = ? AND active = 1').get(serviceId);
   if (!service) return res.status(404).json({ error: 'Servicio no encontrado.' });
 
   const barber = await db.prepare('SELECT id, work_start, work_end FROM barbers WHERE id = ? AND active = 1').get(barberId);
@@ -97,9 +97,11 @@ async function createReservation(req, res) {
     }
 
     await trx.prepare(`
-      INSERT INTO reservations (id, client_id, barber_id, service_id, date, start_time, end_time, notes)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(id, client.id, barberId, serviceId, date, startTime, toHHMM(endMin), notes || null);
+      INSERT INTO reservations (id, client_id, barber_id, service_id, date, start_time, end_time, notes,
+        service_name_snapshot, service_price_snapshot, service_duration_snapshot)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, client.id, barberId, serviceId, date, startTime, toHHMM(endMin), notes || null,
+      service.name, service.price, service.duration_minutes);
   });
 
   try {
@@ -109,7 +111,8 @@ async function createReservation(req, res) {
   }
 
   const reservation = await db.prepare(`
-    SELECT r.*, s.name as service_name, s.price, ub.name as barber_name, uc.name as client_name,
+    SELECT r.*, COALESCE(r.service_name_snapshot, s.name) as service_name,
+           COALESCE(r.service_price_snapshot, s.price) as price, ub.name as barber_name, uc.name as client_name,
            uc.id as client_user_id, uc.email as client_email, uc.phone as client_phone
     FROM reservations r
     JOIN services s ON s.id = r.service_id
@@ -138,7 +141,7 @@ async function listReservations(req, res) {
 
   if (role === 'admin') {
     rows = await db.prepare(`
-      SELECT r.*, s.name as service_name, s.price, ub.name as barber_name, uc.name as client_name
+      SELECT r.*, COALESCE(r.service_name_snapshot, s.name) as service_name, COALESCE(r.service_price_snapshot, s.price) as price, ub.name as barber_name, uc.name as client_name
       FROM reservations r
       JOIN services s ON s.id = r.service_id
       JOIN barbers b ON b.id = r.barber_id JOIN users ub ON ub.id = b.user_id
@@ -148,7 +151,7 @@ async function listReservations(req, res) {
   } else if (role === 'barbero') {
     const barber = await db.prepare('SELECT id FROM barbers WHERE user_id = ?').get(userId);
     rows = await db.prepare(`
-      SELECT r.*, s.name as service_name, s.price, uc.name as client_name, uc.phone as client_phone
+      SELECT r.*, COALESCE(r.service_name_snapshot, s.name) as service_name, COALESCE(r.service_price_snapshot, s.price) as price, uc.name as client_name, uc.phone as client_phone
       FROM reservations r
       JOIN services s ON s.id = r.service_id
       JOIN clients c ON c.id = r.client_id JOIN users uc ON uc.id = c.user_id
@@ -158,7 +161,7 @@ async function listReservations(req, res) {
   } else {
     const client = await db.prepare('SELECT id FROM clients WHERE user_id = ?').get(userId);
     rows = await db.prepare(`
-      SELECT r.*, s.name as service_name, s.price, ub.name as barber_name
+      SELECT r.*, COALESCE(r.service_name_snapshot, s.name) as service_name, COALESCE(r.service_price_snapshot, s.price) as price, ub.name as barber_name
       FROM reservations r
       JOIN services s ON s.id = r.service_id
       JOIN barbers b ON b.id = r.barber_id JOIN users ub ON ub.id = b.user_id
@@ -218,7 +221,7 @@ async function rescheduleReservation(req, res) {
 
   const service = await db.prepare('SELECT duration_minutes FROM services WHERE id = ?').get(reservation.service_id);
   const startMin = toMinutes(startTime);
-  const endMin = startMin + service.duration_minutes;
+  const endMin = startMin + (reservation.service_duration_snapshot || service.duration_minutes);
 
   const tx = db.transaction(async (trx) => {
     const rows = await trx.prepare(`
@@ -263,6 +266,7 @@ async function completeReservation(req, res) {
   const reservation = await db.prepare('SELECT * FROM reservations WHERE id = ?').get(id);
   if (!(await assertCanModify(db, req, res, reservation))) return;
   if (req.user.role === 'cliente') return res.status(403).json({ error: 'Solo el barbero o admin puede completar la cita.' });
+  if (reservation.status !== 'confirmed') return res.status(409).json({ error: 'Solo una cita confirmada puede marcarse como completada.' });
 
   await db.prepare(`UPDATE reservations SET status = 'completed', updated_at = ? WHERE id = ?`).run(nowIso(), id);
   const loyalty = await addLoyaltyPoints(reservation.client_id, POINTS_PER_VISIT);

@@ -53,6 +53,9 @@ CREATE TABLE IF NOT EXISTS reservations (
   notes TEXT,
   notified_24h INTEGER DEFAULT 0,
   notified_2h INTEGER DEFAULT 0,
+  service_name_snapshot TEXT,
+  service_price_snapshot INTEGER,
+  service_duration_snapshot INTEGER,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
@@ -139,6 +142,55 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS order_items (
+  id TEXT PRIMARY KEY,
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE RESTRICT,
+  product_id TEXT REFERENCES products(id) ON DELETE RESTRICT,
+  product_name TEXT NOT NULL,
+  unit_price INTEGER NOT NULL CHECK(unit_price >= 0),
+  quantity INTEGER NOT NULL CHECK(quantity > 0),
+  unit_cost INTEGER,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
+
+CREATE TABLE IF NOT EXISTS purchase_items (
+  id TEXT PRIMARY KEY,
+  purchase_id TEXT NOT NULL REFERENCES purchases(id) ON DELETE RESTRICT,
+  product_id TEXT REFERENCES products(id) ON DELETE RESTRICT,
+  product_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL CHECK(quantity > 0),
+  unit_cost INTEGER NOT NULL CHECK(unit_cost >= 0),
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE TABLE IF NOT EXISTS stock_movements (
+  id TEXT PRIMARY KEY,
+  product_id TEXT NOT NULL REFERENCES products(id) ON DELETE RESTRICT,
+  movement_type TEXT NOT NULL CHECK(movement_type IN ('purchase','sale','adjustment','return','waste')),
+  quantity_delta INTEGER NOT NULL,
+  unit_cost INTEGER,
+  reference_type TEXT,
+  reference_id TEXT,
+  created_by TEXT REFERENCES users(id) ON DELETE SET NULL,
+  note TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_stock_movements_product_created ON stock_movements(product_id, created_at);
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id TEXT PRIMARY KEY,
+  actor_user_id TEXT REFERENCES users(id) ON DELETE SET NULL,
+  entity_type TEXT NOT NULL,
+  entity_id TEXT NOT NULL,
+  action TEXT NOT NULL,
+  before_data TEXT,
+  after_data TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_audit_log_entity ON audit_log(entity_type, entity_id, created_at);
+
 CREATE INDEX IF NOT EXISTS idx_orders_client ON orders(client_id, status);
 CREATE INDEX IF NOT EXISTS idx_orders_buy_order ON orders(buy_order);
 
@@ -178,6 +230,9 @@ async function initDb() {
     `ALTER TABLE products ADD COLUMN cost_price INTEGER`,
     `ALTER TABLE orders ADD COLUMN mp_preference_id TEXT`,
     `ALTER TABLE orders ADD COLUMN mp_payment_id TEXT`,
+    `ALTER TABLE reservations ADD COLUMN service_name_snapshot TEXT`,
+    `ALTER TABLE reservations ADD COLUMN service_price_snapshot INTEGER`,
+    `ALTER TABLE reservations ADD COLUMN service_duration_snapshot INTEGER`,
   ]) {
     try { await adapter.exec(stmt); } catch (e) { /* la columna ya existe */ }
   }

@@ -1,11 +1,14 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const { randomBytes } = require('crypto');
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const DB_DRIVER = process.env.DB_DRIVER || 'sqlite';
 const configuredSecret = process.env.JWT_SECRET || '';
 if (IS_PRODUCTION && (configuredSecret.length < 32 || /change|dev_secret/i.test(configuredSecret))) throw new Error('Configura JWT_SECRET aleatorio de al menos 32 caracteres en producción.');
 const JWT_SECRET = configuredSecret && !/change|dev_secret/i.test(configuredSecret) ? configuredSecret : randomBytes(48).toString('hex');
 const SITE_ORIGIN = process.env.SITE_ORIGIN || `http://localhost:${process.env.PORT || 8080}`;
 if (IS_PRODUCTION && !SITE_ORIGIN.startsWith('https://')) throw new Error('SITE_ORIGIN debe usar HTTPS en producción.');
+if (IS_PRODUCTION && DB_DRIVER !== 'postgres') throw new Error('Producción requiere DB_DRIVER=postgres. SQLite es solo para desarrollo y pruebas.');
+if (IS_PRODUCTION && !process.env.DATABASE_URL) throw new Error('Producción requiere DATABASE_URL para PostgreSQL.');
 
 module.exports = {
   PORT: process.env.PORT || 8080,
@@ -17,7 +20,7 @@ module.exports = {
   SLOT_STEP_MINUTES: parseInt(process.env.SLOT_STEP_MINUTES || '60', 10),
 
   // ---- Base de datos ----
-  DB_DRIVER: process.env.DB_DRIVER || 'sqlite', // 'sqlite' (dev) | 'postgres' (produccion)
+  DB_DRIVER, // SQLite solo para desarrollo/pruebas; PostgreSQL en producción.
   DATABASE_URL: process.env.DATABASE_URL || '',
   PG_SSL: process.env.PG_SSL === 'true',
 

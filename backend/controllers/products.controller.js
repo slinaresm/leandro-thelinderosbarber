@@ -1,5 +1,6 @@
 const { randomUUID: uuidv4 } = require('crypto');
 const getDb = require('../config/db');
+const { audit } = require('../services/audit.service');
 
 const SORT_MAP = {
   relevancia: 'p.active DESC, p.created_at DESC',
@@ -100,7 +101,11 @@ async function createProduct(req, res) {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(id, name, description || null, parseInt(price, 10), cost_price === undefined || cost_price === '' ? null : parseInt(cost_price, 10), imageUrl, parseInt(stock, 10) || 0, category || null, 1);
 
-  res.status(201).json({ product: await db.prepare('SELECT * FROM products WHERE id = ?').get(id) });
+  const product = await db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+  if (product.stock > 0) await db.prepare(`INSERT INTO stock_movements (id, product_id, movement_type, quantity_delta, unit_cost, reference_type, reference_id, created_by)
+    VALUES (?, ?, 'adjustment', ?, ?, 'product_create', ?, ?)`).run(uuidv4(), id, product.stock, product.cost_price, id, req.user.id);
+  await audit(db, { actorUserId: req.user.id, entityType: 'product', entityId: id, action: 'created', after: product });
+  res.status(201).json({ product });
 }
 
 // PATCH /api/products/:id - admin actualiza producto
@@ -136,7 +141,13 @@ async function updateProduct(req, res) {
     id
   );
 
-  res.json({ product: await db.prepare('SELECT * FROM products WHERE id = ?').get(id) });
+  const product = await db.prepare('SELECT * FROM products WHERE id = ?').get(id);
+  if (stock !== undefined && product.stock !== existing.stock) {
+    await db.prepare(`INSERT INTO stock_movements (id, product_id, movement_type, quantity_delta, unit_cost, reference_type, reference_id, created_by)
+      VALUES (?, ?, 'adjustment', ?, ?, 'product_update', ?, ?)`).run(uuidv4(), id, product.stock - existing.stock, product.cost_price, id, req.user.id);
+  }
+  await audit(db, { actorUserId: req.user.id, entityType: 'product', entityId: id, action: 'updated', before: existing, after: product });
+  res.json({ product });
 }
 
 // GET /api/products/admin/inventory-summary - totales para el panel "Stock y costos"
@@ -175,6 +186,7 @@ async function deleteProduct(req, res) {
   const existing = await db.prepare('SELECT * FROM products WHERE id = ?').get(id);
   if (!existing) return res.status(404).json({ error: 'Producto no encontrado.' });
   await db.prepare('UPDATE products SET active = 0 WHERE id = ?').run(id);
+  await audit(db, { actorUserId: req.user.id, entityType: 'product', entityId: id, action: 'deactivated', before: existing, after: { ...existing, active: 0 } });
   res.json({ message: 'Producto desactivado.' });
 }
 

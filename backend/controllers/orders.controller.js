@@ -9,6 +9,17 @@ function generateBuyOrder() {
   return `BL${ts}${rand}`.toUpperCase();
 }
 
+async function getOrderItems(db, orderId, legacyItems = '[]') {
+  const items = await db.prepare(`SELECT product_id as "productId", product_name as name, unit_price as price, quantity, unit_cost as "unitCost" FROM order_items WHERE order_id = ? ORDER BY created_at, id`).all(orderId);
+  return items.length ? items : JSON.parse(legacyItems || '[]');
+}
+
+async function recordStockMovement(db, { productId, quantityDelta, unitCost = null, type, referenceId, userId = null }) {
+  await db.prepare(`INSERT INTO stock_movements (id, product_id, movement_type, quantity_delta, unit_cost, reference_type, reference_id, created_by)
+    VALUES (?, ?, ?, ?, ?, 'order', ?, ?)`)
+    .run(uuidv4(), productId, type, quantityDelta, unitCost, referenceId, userId);
+}
+
 // POST /api/orders - el cliente arma su carrito y se crea la orden + preferencia de pago
 // body: { items: [{ productId, quantity }] }
 async function createOrder(req, res) {
@@ -50,10 +61,16 @@ async function createOrder(req, res) {
   const id = uuidv4();
   const buyOrder = generateBuyOrder();
 
-  await db.prepare(`
-    INSERT INTO orders (id, client_id, buy_order, session_id, items, total, status)
-    VALUES (?, ?, ?, ?, ?, ?, 'pending')
-  `).run(id, client.id, buyOrder, id, JSON.stringify(orderItems), total);
+  const tx = db.transaction(async (trx) => {
+    await trx.prepare(`INSERT INTO orders (id, client_id, buy_order, session_id, items, total, status)
+      VALUES (?, ?, ?, ?, ?, ?, 'pending')`).run(id, client.id, buyOrder, id, JSON.stringify(orderItems), total);
+    for (const item of orderItems) {
+      const product = await trx.prepare('SELECT cost_price FROM products WHERE id = ?').get(item.productId);
+      await trx.prepare(`INSERT INTO order_items (id, order_id, product_id, product_name, unit_price, quantity, unit_cost)
+        VALUES (?, ?, ?, ?, ?, ?, ?)`).run(uuidv4(), id, item.productId, item.name, item.price, item.quantity, product?.cost_price ?? null);
+    }
+  });
+  await tx();
 
   // El pago se coordina por WhatsApp (no hay pasarela de pago conectada
   // todavia): la orden queda "pending" con el stock ya validado, y el admin
@@ -101,10 +118,12 @@ async function applyPaymentResult(db, order, paymentId, approved, paymentDetail,
 
   const tx = db.transaction(async (trx) => {
     if (approved) {
-      const items = JSON.parse(order.items);
+      const items = await getOrderItems(trx, order.id, order.items);
       for (const item of items) {
-        await trx.prepare('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?')
+        const update = await trx.prepare('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?')
           .run(item.quantity, item.productId, item.quantity);
+        if (update.changes !== 1) { const error = new Error(`Stock insuficiente para confirmar ${item.name}.`); error.status = 409; throw error; }
+        await recordStockMovement(trx, { productId: item.productId, quantityDelta: -item.quantity, unitCost: item.unitCost, type: 'sale', referenceId: order.id });
       }
     }
     await trx.prepare(`UPDATE orders SET status = ?, mp_payment_id = ?, payment_detail = ?, updated_at = ? WHERE id = ?`)
@@ -230,10 +249,12 @@ async function updateOrderStatus(req, res) {
 
   const tx = db.transaction(async (trx) => {
     if (status === 'paid') {
-      const items = JSON.parse(order.items);
+      const items = await getOrderItems(trx, order.id, order.items);
       for (const item of items) {
-        await trx.prepare('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?')
+        const update = await trx.prepare('UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?')
           .run(item.quantity, item.productId, item.quantity);
+        if (update.changes !== 1) { const error = new Error(`Stock insuficiente para confirmar ${item.name}.`); error.status = 409; throw error; }
+        await recordStockMovement(trx, { productId: item.productId, quantityDelta: -item.quantity, unitCost: item.unitCost, type: 'sale', referenceId: order.id, userId: req.user.id });
       }
     }
     await trx.prepare(`UPDATE orders SET status = ?, updated_at = ? WHERE id = ?`).run(status, nowIso(), id);
@@ -258,7 +279,7 @@ async function getOrder(req, res) {
     }
   }
 
-  res.json({ order: { ...order, items: JSON.parse(order.items) } });
+  res.json({ order: { ...order, items: await getOrderItems(db, order.id, order.items) } });
 }
 
 // GET /api/orders - admin ve todas las ordenes, cliente ve las suyas
@@ -277,7 +298,7 @@ async function listOrders(req, res) {
     const client = await db.prepare('SELECT id FROM clients WHERE user_id = ?').get(req.user.id);
     rows = await db.prepare('SELECT * FROM orders WHERE client_id = ? ORDER BY created_at DESC').all(client ? client.id : 'none');
   }
-  res.json({ orders: rows.map(o => ({ ...o, items: JSON.parse(o.items) })) });
+  res.json({ orders: await Promise.all(rows.map(async (o) => ({ ...o, items: await getOrderItems(db, o.id, o.items) }))) });
 }
 
 module.exports = { createOrder, mercadopagoReturn, mercadopagoWebhook, updateOrderStatus, getOrder, listOrders };

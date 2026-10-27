@@ -135,6 +135,8 @@ CREATE TABLE IF NOT EXISTS orders (
   total INTEGER NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','paid','failed','cancelled')),
   webpay_token TEXT,
+  mp_preference_id TEXT,
+  mp_payment_id TEXT,
   payment_detail TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
