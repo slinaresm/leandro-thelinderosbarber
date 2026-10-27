@@ -46,6 +46,16 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error('Error aplicando migracion:', err.message);
+  // No imprimir DATABASE_URL ni configuracion de conexion: los logs de Actions
+  // deben servir para diagnosticar sin revelar credenciales.
+  console.error('Error aplicando migracion:', err.message || 'sin mensaje');
+  console.error('Diagnostico seguro:', JSON.stringify({
+    name: err.name || null,
+    code: err.code || null,
+    errno: err.errno || null,
+    syscall: err.syscall || null,
+    address: err.address || null,
+    port: err.port || null,
+  }));
   process.exit(1);
 });
