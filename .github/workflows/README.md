@@ -12,8 +12,13 @@ activa revisión manual allí si quieres una segunda aprobación.
 - `FTPS_LB_USERNAME`: usuario FTP.
 - `FTPS_LB_PASSWORD`: contraseña FTP.
 - `FTPS_LB_PORT`: normalmente `21` para FTPS explícito.
-- `FTPS_LB_FRONTEND_PATH`: directorio remoto del sitio público, por ejemplo `public_html`.
-- `FTPS_LB_BACKEND_PATH`: directorio remoto de la aplicación Node.js, fuera de `public_html` cuando cPanel lo permita.
+- `FTPS_LB_BACKEND_USERNAME`: cuenta FTP restringida al directorio privado del backend.
+- `FTPS_LB_BACKEND_PASSWORD`: contraseña de esa cuenta FTP.
+
+La cuenta de frontend debe tener como raíz el Document Root del dominio. La cuenta
+de backend debe tener como raíz `/home/leakmcl/apps/linderosbarber/backend`.
+El flujo publica cada parte directamente en la raíz de su cuenta; no configures
+`FTPS_LB_FRONTEND_PATH` ni `FTPS_LB_BACKEND_PATH`.
 
 ### Migraciones PostgreSQL
 
