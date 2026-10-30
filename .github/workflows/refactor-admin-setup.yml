@@ -1,0 +1,35 @@
+name: Preparar primera cuenta administradora
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refactor-hosting-production
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Subir solo inicializador privado sin claves
+        env:
+          FTP_SERVER: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          FTP_PORT: ${{ secrets.REFACTOR_FTPS_PORT }}
+          PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+        run: python3 tools/refactor/hosting/db-preflight-upload.py --admin
+      - name: Conservar recibo sin credenciales
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: refactor-admin-setup-${{ github.run_id }}
+          path: admin-init-upload-result.json
+          retention-days: 7
+          if-no-files-found: error
