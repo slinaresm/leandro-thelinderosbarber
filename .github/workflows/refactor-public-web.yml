@@ -1,0 +1,72 @@
+name: Publicar React conservando API en mantenimiento
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Escribe PUBLICAR_REACT_LINDEROS
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refactor-hosting-production
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: inputs.confirmation == 'PUBLICAR_REACT_LINDEROS'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, gd, fileinfo, curl, openssl
+          tools: composer:v2
+          coverage: none
+      - name: Instalar y validar React
+        working-directory: web
+        run: |
+          npm ci
+          npm run typecheck
+      - name: Compilar para el dominio confirmado
+        working-directory: web
+        env:
+          VITE_SITE_URL: https://linderosbarber.cl
+        run: npm run build
+      - name: Preparar paquete con rutas privadas confirmadas
+        env:
+          REFACTOR_SITE_ORIGIN: https://linderosbarber.cl
+          REFACTOR_API_PATH: /home/leakmcl/apps/linderosbarber-php/api
+          REFACTOR_PUBLIC_PATH: /home/leakmcl/public_html/linderosbarber.cl
+        run: |
+          export COMPOSER_PHAR="$(command -v composer)"
+          node tools/refactor/hosting/package.mjs .refactor-data/public-release
+      - name: Respaldar destino y publicar solo archivos publicos
+        env:
+          FTP_SERVER: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          FTP_PORT: ${{ secrets.REFACTOR_FTPS_PORT }}
+          PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+          PUBLIC_USER: ${{ secrets.REFACTOR_FTPS_PUBLIC_USERNAME }}
+          PUBLIC_PASSWORD: ${{ secrets.REFACTOR_FTPS_PUBLIC_PASSWORD }}
+        run: python3 tools/refactor/hosting/public-web-publish.py
+      - name: Conservar solo recibo sin archivos antiguos ni credenciales
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: refactor-public-web-${{ github.run_id }}
+          path: public-web-result.json
+          retention-days: 7
+          if-no-files-found: error

@@ -1,0 +1,109 @@
+{
+  "source": "https://fonts.google.com/",
+  "date": "2026-10-29",
+  "families": [
+    "Bricolage Grotesque",
+    "DM Sans",
+    "Inter",
+    "Playfair Display"
+  ],
+  "license": "SIL Open Font License 1.1; OFL-*.txt adjuntos",
+  "files": [
+    {
+      "file": "linderos-0.ttf",
+      "sha256": "b56db40c26850f83ba2ebffa1f7faa01e5ee4e55ac63decee1433de520a38483"
+    },
+    {
+      "file": "linderos-1.ttf",
+      "sha256": "e1b454f5469f3d0d98c117651a4d15a8345ad77b50f09540b5cf61e82511b563"
+    },
+    {
+      "file": "linderos-10.ttf",
+      "sha256": "1b08e7fc267a5c7e1d614100f604b83e7e8a0be241f0f288faa2b3ac93a683ba"
+    },
+    {
+      "file": "linderos-11.ttf",
+      "sha256": "8c883f63b2c4157d997319f2c8bc6995ed4357ef371940d31ca159004a4aae63"
+    },
+    {
+      "file": "linderos-12.ttf",
+      "sha256": "e7a1aaf7eda9f2fad4131725fa556265ec75ca7b2d756260173a040363e8d4f7"
+    },
+    {
+      "file": "linderos-13.ttf",
+      "sha256": "b37284b5701b6b168dfc770aa1a4ac492106422fd3ba76bc7641e37434e8019c"
+    },
+    {
+      "file": "linderos-14.ttf",
+      "sha256": "6021680663c58b344d8404c289c755aadc662a02189ffe4f5ca79378f9e97840"
+    },
+    {
+      "file": "linderos-15.ttf",
+      "sha256": "ef1515fa19156794b36e5f362c677f78837c38ccdd6fa1fa76d1dd918ea7abbe"
+    },
+    {
+      "file": "linderos-16.ttf",
+      "sha256": "5b667e91b59a4e1d7985eb9933be7f03ad46e1ea6380b8e729ff6f136ef2ab42"
+    },
+    {
+      "file": "linderos-17.ttf",
+      "sha256": "954e20ee10ae685d0a5a6e6ee380165ea9c8eb329c0e22a58739496714f66991"
+    },
+    {
+      "file": "linderos-18.ttf",
+      "sha256": "a466e5d1f7c0e282d047f4d168f788986f49ba01281c6278162745ec2e124388"
+    },
+    {
+      "file": "linderos-19.ttf",
+      "sha256": "1609a54fa3ad1abc8d0037132f73700333241ea0b65672079998e352f151dea7"
+    },
+    {
+      "file": "linderos-2.ttf",
+      "sha256": "284891c74c258cff7233962e048d9470bfb9fc326b53dd0bca408789297c3409"
+    },
+    {
+      "file": "linderos-20.ttf",
+      "sha256": "b60ffb0ee2b4e09d71d67ff3ea16d6a23cf2e0cf637c5f4e36fff2e3b1465252"
+    },
+    {
+      "file": "linderos-21.ttf",
+      "sha256": "8ab6a1db2d7caeb46c742371da500d0f3de1dc6ec6bea2aef0106f678d7a1f8d"
+    },
+    {
+      "file": "linderos-22.ttf",
+      "sha256": "adefc53e7b3d483f1fa5e85edd82b7689ca79db25a1f6786bd7949cdcfeec601"
+    },
+    {
+      "file": "linderos-23.ttf",
+      "sha256": "71a599c413e0126bb042a4b757adaf801fa8b67cdbbcc9cb42da427d7c3c5533"
+    },
+    {
+      "file": "linderos-3.ttf",
+      "sha256": "913ee3631949ee1b4fb2601269412fca5775eb994d4f87be2c366c94ac123dc5"
+    },
+    {
+      "file": "linderos-4.ttf",
+      "sha256": "50fe1039eb3ff208d027a4867d3f53bd288bba76273a718578f7b3ec0feec388"
+    },
+    {
+      "file": "linderos-5.ttf",
+      "sha256": "b0ae3e89a7d3ef2b1838bb4b1ceb0b17cc3435af061eee809d76aa623ff116e9"
+    },
+    {
+      "file": "linderos-6.ttf",
+      "sha256": "376427b5322148d8de1e03f263bcca4935a2d60ba71d9f94f4947ab664c711ae"
+    },
+    {
+      "file": "linderos-7.ttf",
+      "sha256": "b79a2ea7a38f33fd96a282fadb9ce97626bb0724a44d21075859f0e50239993a"
+    },
+    {
+      "file": "linderos-8.ttf",
+      "sha256": "2a8e7f713ee79fbccdef3cef5c787aff47580299f7da60144961e7db2ec08211"
+    },
+    {
+      "file": "linderos-9.ttf",
+      "sha256": "d0f4bc7faca468376e3db9b5e57afcdc2192134c9ac82a9511f32767b56853a4"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+/* Integración React; la identidad visual se conserva en los estilos originales. */
+body{margin:0}
+.status-page{min-height:85svh;padding:190px 7% 90px;max-width:1050px;margin:auto}
+.status-page h1{font-family:var(--font-display,serif);font-size:clamp(36px,6vw,70px);line-height:1.15;margin:15px 0 28px}
+.status-page p{line-height:1.8;margin-bottom:22px;max-width:680px}
+.vintage-home .policy-content{padding-top:165px}
+.vintage-home .policy-content h1{font-size:clamp(40px,6vw,64px);line-height:1.1;margin:0 0 25px}
+.vintage-home .policy-content section{scroll-margin-top:140px!important}
+.session-close{background:transparent;color:inherit;border:1px solid currentColor;padding:8px;font:inherit;cursor:pointer}
+.form-error{padding:14px;background:#311b22;color:#ffe1e5;border:1px solid #bf7a85;margin-bottom:20px;line-height:1.6}
+.field-help{font-size:12px;margin-top:8px;color:#c4c8cd}
+.global-message{position:fixed;top:105px;left:5%;right:5%;z-index:1000;background:#311b22;color:#ffe1e5;padding:15px}
+.auth-wrap{width:100%;display:flex;justify-content:center;padding:24px}
+.auth-card{width:100%;max-width:440px}
+.whatsapp-contact{position:fixed;right:22px;bottom:22px;z-index:30;background:#e0e5df;color:#142019;padding:13px 18px;border-radius:3px;border:1px solid #586c5c;font-size:13px}
+:focus-visible{outline:3px solid #e3bb78!important;outline-offset:5px}
+[hidden]{display:none!important}
+@media(min-width:1051px){.masthead nav{gap:clamp(12px,1.6vw,28px)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation:none!important;transition:none!important}}

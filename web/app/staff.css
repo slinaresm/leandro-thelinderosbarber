@@ -1,0 +1,25 @@
+.staff-page { max-width: 1180px; }
+.staff-section { margin-top: 1.5rem; }
+.staff-page label { display: grid; gap: .4rem; margin: .8rem 0; max-width: 42rem; }
+.staff-page input, .staff-page select, .staff-page textarea { box-sizing: border-box; width: 100%; min-width: 0; padding: .7rem; color: #f3e9d5; background: #211f1a; border: 1px solid #82735b; border-radius: 4px; font: inherit; }
+.staff-page textarea { min-height: 7rem; }
+.staff-page input[type=checkbox] { width: 1.3rem; height: 1.3rem; }
+.staff-page .check-label { display: flex; align-items: center; gap: .8rem; }
+.staff-page fieldset { min-width: 0; border: 1px solid #786a52; padding: 1rem; margin: 1rem 0; }
+.staff-page legend { padding: .3rem; font-weight: 700; }
+.staff-page button { margin: .3rem .5rem .3rem 0; max-width: 100%; overflow-wrap: anywhere; min-height: 44px; padding: .65rem .9rem; border: 1px solid #a99163; border-radius: 4px; background: #c6ab78; color: #1c1913; font: inherit; font-weight: 600; cursor: pointer; }
+.staff-page button:disabled { opacity: .55; cursor: default; }
+.staff-page :focus-visible { outline: 3px solid #f2cd7d; outline-offset: 3px; }
+.staff-page .client-nav [aria-current=page] { border-bottom: 3px solid #e4c58b; color: #f2cd7d; }
+.staff-page .client-card { margin: 1rem 0; overflow-wrap: anywhere; }
+.staff-page .staff-product img, .staff-page .staff-product .product-empty { width: 140px; height: 140px; object-fit: cover; }
+.staff-page .staff-action { display: inline; }
+.staff-page dialog { box-sizing: border-box; width: min(94vw, 36rem); max-height: 90dvh; overflow: auto; border: 2px solid #b49765; border-radius: 8px; padding: 1.5rem; background: #242019; color: #f4ead7; }
+.staff-page dialog::backdrop { background: #000b; }
+.staff-page .staff-table { max-width: 100%; overflow-x: auto; margin: 1rem 0; }
+.staff-page table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+.staff-page th, .staff-page td { text-align: left; padding: .7rem; border-bottom: 1px solid #786a52; }
+.staff-page .staff-metrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); max-width: 48rem; gap: .5rem 1rem; }
+.staff-page .staff-metrics dd { margin: 0; font-weight: 700; }
+.preserve-lines { white-space: pre-wrap; overflow-wrap: anywhere; }
+@media (max-width: 580px) { .staff-page { padding-inline: 1rem; } .staff-page .client-nav { gap: .5rem; } .staff-page fieldset { padding: .7rem; } .staff-page .staff-metrics { grid-template-columns: minmax(0, 1fr); } .staff-page .staff-metrics dd { margin-bottom: .7rem; } }

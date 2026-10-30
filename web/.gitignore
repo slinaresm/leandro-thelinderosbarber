@@ -1,0 +1,7 @@
+node_modules/
+build/
+.react-router/
+public/assets/
+test-results/
+playwright-report/
+.env
