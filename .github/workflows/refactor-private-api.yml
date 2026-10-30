@@ -39,24 +39,17 @@ jobs:
       - name: Construir paquete privado sin entorno ni datos
         run: node tools/refactor/hosting/private-api-package.mjs .refactor-data/private-api-release
       - name: Subir solo a la cuenta privada conservando entorno y almacenamiento
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        env:
+          FTP_SERVER: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          FTP_PORT: ${{ secrets.REFACTOR_FTPS_PORT }}
+          PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+        run: python3 tools/refactor/hosting/private-api-upload.py
+      - name: Conservar solo recibo del paquete sin claves
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          server: ${{ secrets.REFACTOR_FTPS_SERVER }}
-          username: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
-          password: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
-          protocol: ftps
-          security: strict
-          port: ${{ secrets.REFACTOR_FTPS_PORT }}
-          local-dir: ./.refactor-data/private-api-release/
-          server-dir: ./
-          state-name: .ftp-refactor-private.json
-          dangerous-clean-slate: false
-          exclude: |
-            **/.env
-            **/.env.*
-            **/storage/**
-            **/bootstrap/cache/config.php
-            **/bootstrap/cache/routes*.php
-            **/bootstrap/cache/events.php
-            **/uploads/**
-            **/.git*
+          name: refactor-private-api-${{ github.run_id }}
+          path: private-api-upload-result.json
+          retention-days: 7
+          if-no-files-found: error
