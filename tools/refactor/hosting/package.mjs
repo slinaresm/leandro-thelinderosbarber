@@ -17,6 +17,9 @@ DirectorySlash Off
 ErrorDocument 404 /404.html
 LimitRequestBody 12582912
 RewriteEngine On
+RewriteCond %{REQUEST_METHOD} ^(GET|HEAD)$
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^\\.well-known/(?:acme-challenge|pki-validation)/[A-Za-z0-9_-]+(?:\\.txt)?$ - [END]
 RewriteCond %{HTTPS} !=on
 RewriteRule ^ ${origin}%{REQUEST_URI} [R=308,END,NE]
 RewriteCond expr "req('Content-Length') -gt 12582912"
