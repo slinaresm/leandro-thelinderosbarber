@@ -119,5 +119,6 @@
     }
   ],
   "screenshots": 42,
-  "published": false
+  "published": true,
+  "publicationRun": "https://github.com/slinaresm/leandro-thelinderosbarber/actions/runs/41110014751"
 }

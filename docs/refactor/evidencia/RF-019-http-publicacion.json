@@ -1,0 +1,34 @@
+{
+  "scope": "RF-019-publication-http",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/ingresar",
+      "status": 200
+    },
+    {
+      "path": "/administracion",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    }
+  ],
+  "newAdminStylesVerified": true,
+  "adminStyles": [
+    "/assets/root-B3HhUrnt.css"
+  ],
+  "newAdminCodeVerified": true,
+  "adminCode": [
+    "/assets/staff-panel-BypHjUfl.js"
+  ],
+  "status": "passed"
+}
