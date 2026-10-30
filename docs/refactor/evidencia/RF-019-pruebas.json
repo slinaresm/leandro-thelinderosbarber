@@ -1,0 +1,123 @@
+{
+  "date": "2026-10-30",
+  "scope": "RF-019 UX/UI administración",
+  "status": "passed",
+  "browser": "Microsoft Edge / Chromium real, Playwright 1.64.1",
+  "backend": "PHP 8.4 / MariaDB 10.6.28 real",
+  "typecheck": "passed",
+  "build": "passed",
+  "firstRun": {
+    "passed": 22,
+    "failed": 2,
+    "notes": "Se corrigieron etiquetas accesibles exactas; se repitieron siete pruebas afectadas con la compilación final."
+  },
+  "finalSelection": {
+    "startTime": "2026-10-30T17:16:24.938Z",
+    "duration": 119432.698,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "uniqueScenarios": 24,
+  "cases": [
+    {
+      "title": "cuatro consultas privadas: matriz HTTP real, proyecciones y validación",
+      "passed": true
+    },
+    {
+      "title": "rutas por rol, alias con sección, recarga y panel ajeno",
+      "passed": true
+    },
+    {
+      "title": "mutaciones administrativas rechazan otros roles aunque invoquen la API directamente",
+      "passed": true
+    },
+    {
+      "title": "barbero completa propia visita una vez y acredita diez puntos",
+      "passed": true
+    },
+    {
+      "title": "reprogramación conflictiva preserva snapshot y cancelar exige confirmación",
+      "passed": true
+    },
+    {
+      "title": "clientes y documentos limitados al barbero; carga y borrado multipart reales",
+      "passed": true
+    },
+    {
+      "title": "notas privadas texto literal, borrado y rechazo admin/otro barbero",
+      "passed": true
+    },
+    {
+      "title": "horario propio validado y materiales: solicitud, competencia y resolución sin sumar cantidad",
+      "passed": true
+    },
+    {
+      "title": "administración de servicios y barberos conserva bajas y no expone credenciales",
+      "passed": true
+    },
+    {
+      "title": "producto multipart: imagen, edición de costo nulo, baja/alta y movimientos paginados",
+      "passed": true
+    },
+    {
+      "title": "pedido manual confirma una vez stock, movimiento y estado; externo requiere conciliación",
+      "passed": true
+    },
+    {
+      "title": "compra manual mezcla existente y nuevo; stock, costo e historial atómicos",
+      "passed": true
+    },
+    {
+      "title": "respuesta de compra perdida permite mismo reintento sin duplicar stock ni escritura por eventos",
+      "passed": true
+    },
+    {
+      "title": "extracción simulada real, revisión editable obligatoria, factura privada y confirmación",
+      "passed": true
+    },
+    {
+      "title": "errores de archivo/proveedor conservan formulario y nunca simulan éxito",
+      "passed": true
+    },
+    {
+      "title": "admin lee historial/fotos pero no crea documentos de barbero ni modifica puntos",
+      "passed": true
+    },
+    {
+      "title": "administrador puede consultar y retirar foto ajena con confirmación",
+      "passed": true
+    },
+    {
+      "title": "promociones: alta, edición, estados y conteos, sin envío de campañas",
+      "passed": true
+    },
+    {
+      "title": "analítica período local, snapshots y costo desconocido se muestran sin convertirlo a cero",
+      "passed": true
+    },
+    {
+      "title": "eventos entre dos sesiones actualizan lecturas y conservan edición sin duplicar acciones",
+      "passed": true
+    },
+    {
+      "title": "caducidad retira datos privados, cancela suscripción y no persiste documentos en navegador",
+      "passed": true
+    },
+    {
+      "title": "admin finaliza en otra sesión y barbero recibe puntos/estado sin reenviar formulario abierto",
+      "passed": true
+    },
+    {
+      "title": "RF019 búsqueda normalizada, filtros, páginas y formulario recuperable",
+      "passed": true
+    },
+    {
+      "title": "revisión visual de todas las secciones, móvil/escritorio, teclado y enlaces directos",
+      "passed": true
+    }
+  ],
+  "screenshots": 42,
+  "published": false
+}

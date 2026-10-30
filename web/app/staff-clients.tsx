@@ -1,3 +1,4 @@
+import { StaffCollection } from './staff-collection';
 import { useState } from 'react';
 import { imagePath, localDate, money, statusText } from './client';
 import { mutate } from './http';
@@ -20,9 +21,10 @@ function ClientDetails({ client, admin, revision, photosOnly }: { client: Client
 }
 export function StaffClients({ barberId, revision, photosOnly = false }: { barberId?: string; revision: number; photosOnly?: boolean }) {
   const resource = useResource<{ clients: Client[] }>(barberId ? '/barbers/' + encodeURIComponent(barberId) + '/clients' : '/clients', revision);
-  const [selected, setSelected] = useState(''), [filter, setFilter] = useState('');
-  const clients = resource.data?.clients || [], client = clients.find(row => row.id === selected);
-  return <><ResourceState resource={resource} /><label>Buscar cliente<input value={filter} onChange={event => setFilter(event.target.value)} /></label><label>Cliente<select value={client ? selected : ''} onChange={event => setSelected(event.target.value)}><option value="">Selecciona un cliente</option>{clients.filter(row => (row.name + ' ' + row.email).toLowerCase().includes(filter.toLowerCase())).map(row => <option key={row.id} value={row.id}>{row.name}</option>)}</select></label>{clients.length === 0 && resource.data && <p>No hay clientes disponibles para esta cuenta.</p>}{client && <ClientDetails key={client.id} client={client} admin={!barberId} revision={revision} photosOnly={photosOnly} />}</>;
+  const [selected, setSelected] = useState('');
+  const clients = resource.data?.clients || [];
+  return <><ResourceState resource={resource} />{resource.data && <StaffCollection rows={clients} label="clientes" name={row => row.name} search={row => row.name + ' ' + row.email + ' ' + (row.phone || '')} empty="Los clientes aparecerán aquí cuando se registren o tengan una atención vinculada.">{row => <article className={'client-card staff-client-row ' + (selected === row.id ? 'is-selected' : '')}><div className="staff-avatar" aria-hidden="true">{row.name.charAt(0)}</div><div><h3>{row.name}</h3><p>{row.email}<br />{row.phone || 'Sin teléfono'}</p></div><button aria-expanded={selected === row.id} onClick={() => setSelected(selected === row.id ? '' : row.id)}>{selected === row.id ? 'Cerrar ficha' : 'Ver ficha'}</button>{selected === row.id && <ClientDetails key={row.id} client={row} admin={!barberId} revision={revision} photosOnly={photosOnly} />}</article>}</StaffCollection>}</>;
+
 }
 export function StaffNotes({ barberId, revision }: { barberId: string; revision: number }) {
   const resource = useResource<{ notes: { id: string; content: string; created_at: string }[] }>('/notes', revision);

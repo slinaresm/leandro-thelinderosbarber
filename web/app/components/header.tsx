@@ -11,6 +11,7 @@ export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const session = useSession();
+  const staffView = location.pathname === '/administracion' || location.pathname === '/barbero';
   useEffect(() => { setOpen(false); }, [location.pathname, location.hash]);
   useEffect(() => {
     const close = (event: KeyboardEvent) => {
@@ -33,10 +34,9 @@ export function Header() {
       <Link className="wordmark" to="/" aria-label="Barber Linderos, inicio"><img className="brand-logo" src="/assets/img/linderos-logo-v2.png" alt="The Linderos Barber" width="1235" height="848" /></Link>
       <button ref={toggle} className="menu-toggle" type="button" aria-expanded={open} aria-controls="main-nav" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} onClick={() => setOpen(!open)}><span /><span /></button>
       <nav id="main-nav" className={open ? 'open' : ''} aria-label="Navegación principal" onClick={() => setOpen(false)}>
-        <Link to="/#ritual">El ritual</Link><Link to="/#servicios">Servicios</Link><Link to="/#barberos">Barberos</Link><Link to="/tienda">La tienda</Link>
-        <Link to="/carrito">Carrito</Link>
+        {staffView ? <Link to="/">Volver al sitio ↗</Link> : <><Link to="/#ritual">El ritual</Link><Link to="/#servicios">Servicios</Link><Link to="/#barberos">Barberos</Link><Link to="/tienda">La tienda</Link><Link to="/carrito">Carrito</Link></>}
         <Link className="nav-account" to={session.user ? roleHome(session.user.role) : '/ingresar'}>Mi cuenta</Link>
-        <Link className="nav-book" to="/reservar">Reservar hora <span>↗</span></Link>
+        {!staffView && <Link className="nav-book" to="/reservar">Reservar hora <span>↗</span></Link>}
         {session.user && <button className="session-close" type="button" disabled={pending} onClick={logout}>{pending ? 'Cerrando…' : 'Cerrar sesión'}</button>}
       </nav>
     </header>

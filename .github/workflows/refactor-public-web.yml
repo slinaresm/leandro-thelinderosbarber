@@ -1,4 +1,4 @@
-name: Publicar React conservando API en mantenimiento
+name: Publicar React
 
 on:
   workflow_dispatch:
@@ -7,6 +7,11 @@ on:
         description: Escribe PUBLICAR_REACT_LINDEROS
         required: true
         type: string
+      front_update:
+        description: Actualizar front existente sin cambiar mantenimiento privado
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -61,6 +66,7 @@ jobs:
           PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
           PUBLIC_USER: ${{ secrets.REFACTOR_FTPS_PUBLIC_USERNAME }}
           PUBLIC_PASSWORD: ${{ secrets.REFACTOR_FTPS_PUBLIC_PASSWORD }}
+          FRONT_UPDATE: ${{ inputs.front_update }}
         run: python3 tools/refactor/hosting/public-web-publish.py
       - name: Conservar solo recibo sin archivos antiguos ni credenciales
         if: always()

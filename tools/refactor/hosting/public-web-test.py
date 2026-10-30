@@ -48,6 +48,9 @@ class FakeFTP:
 
     def storbinary(self, command, source):
         name = self.resolve(command.removeprefix('STOR '))
+        if getattr(self, 'fail_once', None) == name:
+            self.fail_once = None
+            raise RuntimeError('synthetic late upload failure')
         if self.fail_asset and name == 'assets/app.js':
             raise RuntimeError('synthetic upload failure')
         self.files[name] = source.read()
@@ -135,6 +138,28 @@ class PublicWebTest(unittest.TestCase):
             publisher.publish(self.public, self.private, self.directory, '128')
         self.assertEqual(self.public.files['.htaccess'], publisher.CLOSED)
         self.assertIn('rf017-public-before-128.tar', self.private.files)
+
+    def test_front_update_with_live_api_keeps_previous_assets_and_private_state(self):
+        del self.private.files['api/storage/framework/down']
+        result = publisher.publish(self.public, self.private, self.directory, '129', front_update=True)
+        self.assertEqual(result['status'], 'published-front-update')
+        self.assertFalse(result['apiMaintenanceActive'])
+        self.assertEqual(self.public.files['assets/old.js'], b'old script')
+        self.assertEqual(self.public.deleted, [])
+        self.assertEqual(self.private.files['api/.env'], b'never-read-secret')
+        self.assertNotIn('api/.env', self.private.reads)
+        self.assertEqual(self.public.files['.htaccess'], b'new rules')
+
+    def test_front_update_failure_restores_previous_html_and_rules(self):
+        del self.private.files['api/storage/framework/down']
+        (self.directory / 'z-final.txt').write_bytes(b'late transfer')
+        self.public.fail_once = 'z-final.txt'
+        with self.assertRaisesRegex(publisher.setup.SetupError, 'FRONT_UPDATE_FAILED_PREVIOUS_RESTORED'):
+            publisher.publish(self.public, self.private, self.directory, '130', front_update=True)
+        self.assertEqual(self.public.files['index.html'], b'old')
+        self.assertEqual(self.public.files['.htaccess'], b'old rules')
+        self.assertEqual(self.public.files['assets/old.js'], b'old script')
+        self.assertIn('index.html', self.public.writes)
 
 
 if __name__ == '__main__':

@@ -9,7 +9,8 @@ if (!/^rf016_test_[a-f0-9]+$/.test(fixture.database)) throw new Error('Usar web:
 async function sql(query: string, args: unknown[] = []) { const db = await mysql.createConnection({ ...credentials, database: fixture.database }); try { return (await db.execute(query, args))[0]; } finally { await db.end(); } }
 async function login(page: Page, actor = 'admin') { await page.context().clearCookies(); await page.goto('/ingresar'); await page.getByLabel('Email', { exact: true }).fill(fixture.actors[actor].email); await page.getByLabel('Contraseña', { exact: true }).fill(fixture.password); await page.getByRole('button', { name: 'Entrar a mi cuenta' }).click(); await expect(page.getByTestId('identity')).toBeVisible(); }
 async function api(context: BrowserContext, endpoint: string, body: object = {}, method = 'POST', headers: Record<string, string> = {}) { const csrf = await (await context.request.get('/api/auth/csrf')).json(); return context.request.fetch('/api' + endpoint, { method, data: body, headers: { ...headers, 'X-CSRF-Token': csrf.csrfToken } }); }
-async function tab(page: Page, name: string) { await page.getByRole('navigation', { name: 'Secciones del panel' }).getByRole('link', { name, exact: true }).click(); await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible(); }
+async function tab(page: Page, name: string) { if (await page.locator('.staff-menu-toggle').isVisible()) await page.locator('.staff-menu-toggle').click(); await page.getByRole('navigation', { name: 'Secciones del panel' }).getByRole('link', { name, exact: true }).click(); await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible(); }
+async function selectClient(page: Page, actor: string) { await page.locator('.staff-client-row').filter({ hasText: fixture.actors[actor].email }).getByRole('button', { name: 'Ver ficha', exact: true }).click(); }
 async function confirm(page: Page, scope: Page | Locator, label: string) { await scope.getByRole('button', { name: label, exact: true }).click(); const dialog = page.getByRole('dialog', { name: label, exact: true }); await expect(dialog).toBeVisible(); await dialog.getByRole('button', { name: label + ' definitivamente', exact: true }).click(); return dialog; }
 async function formSave(form: Locator) { await form.getByRole('button', { name: 'Guardar', exact: true }).click(); if (await form.locator('dialog').count()) await form.getByRole('dialog', { name: 'Confirmar cambios' }).getByRole('button', { name: 'Confirmar cambios definitivamente' }).click(); }
 const png = fs.readFileSync(path.join(path.dirname(process.env.WEB_TEST_CONTEXT!), 'photos/rf015-cliente.png'));
@@ -46,7 +47,7 @@ test('cuatro consultas privadas: matriz HTTP real, proyecciones y validación', 
 test('rutas por rol, alias con sección, recarga y panel ajeno', async ({ page }) => {
   await page.goto('/administracion?tab=servicios'); await expect(page).toHaveURL(/ingresar\?returnTo=/);
   await login(page); await page.goto('/admin/dashboard.html?tab=tienda&origen=guardado#contenido'); await expect(page).toHaveURL(/administracion\?tab=tienda&origen=guardado#contenido/); await expect(page.getByRole('heading', { level: 2, name: 'Productos', exact: true })).toBeVisible();
-  await page.reload(); await expect(page.getByRole('form', { name: 'Crear producto' })).toBeVisible();
+  await page.reload(); await expect(page.getByRole('form', { name: 'Crear producto' })).toBeHidden(); await page.locator('summary').filter({ hasText: 'Crear producto' }).click(); await expect(page.getByRole('form', { name: 'Crear producto' })).toBeVisible();
   await page.goto('/barbero'); await expect(page.getByRole('heading', { name: 'Acceso no permitido' })).toBeVisible();
   await login(page, 'barbero'); await page.goto('/barbero/dashboard.html?tab=horario'); await expect(page.getByRole('form', { name: 'Horario de atención' })).toBeVisible();
   await page.goto('/administracion'); await expect(page.getByRole('heading', { name: 'Acceso no permitido' })).toBeVisible();
@@ -88,8 +89,7 @@ test('reprogramación conflictiva preserva snapshot y cancelar exige confirmaci�
 });
 
 test('clientes y documentos limitados al barbero; carga y borrado multipart reales', async ({ page, browser }) => {
-  await login(page, 'barbero'); await tab(page, 'Clientes'); const selection = page.getByRole('combobox', { name: 'Cliente', exact: true });
-  await selection.selectOption(fixture.actors.cliente.profile); await expect(selection.locator('option[value="' + fixture.actors.cliente2.profile + '"]')).toHaveCount(0);
+  await login(page, 'barbero'); await tab(page, 'Clientes'); await selectClient(page, 'cliente'); await expect(page.locator('.staff-client-row').filter({ hasText: fixture.actors.cliente2.email })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Historial autorizado' })).toBeVisible();
   const upload = page.getByRole('form', { name: 'Subir foto de atención' }); await upload.getByLabel('Imagen de atención').setInputFiles({ name: 'atencion.png', mimeType: 'image/png', buffer: png }); await formSave(upload); await expect(upload.getByRole('status')).toContainText('Cambios confirmados');
   const [photo] = await sql('SELECT id,photo_url FROM haircut_photos WHERE client_id=? ORDER BY created_at DESC LIMIT 1', [fixture.actors.cliente.profile]);
@@ -120,16 +120,16 @@ test('horario propio validado y materiales: solicitud, competencia y resolución
 });
 
 test('administración de servicios y barberos conserva bajas y no expone credenciales', async ({ page }) => {
-  await login(page); await tab(page, 'Servicios'); const form = page.getByRole('form', { name: 'Crear servicio' }); await form.getByLabel('Nombre del servicio').fill('Servicio RF016'); await form.getByLabel('Precio (CLP)').fill('7500'); await form.getByLabel('Duración (minutos)').fill('60'); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+  await login(page); await tab(page, 'Servicios'); await page.locator('summary').filter({ hasText: 'Crear servicio' }).click(); const form = page.getByRole('form', { name: 'Crear servicio' }); await form.getByLabel('Nombre del servicio').fill('Servicio RF016'); await form.getByLabel('Precio (CLP)').fill('7500'); await form.getByLabel('Duración (minutos)').fill('60'); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
   const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Servicio RF016', exact: true }) }); await card.getByRole('button', { name: 'Editar Servicio RF016' }).click(); const edit = card.getByRole('form'); await edit.getByLabel('Precio (CLP)').fill('8500'); await formSave(edit); await expect(card).toContainText('$8.500');
   await confirm(page, card, 'Desactivar servicio'); await expect(card).toContainText('Inactivo'); expect((await (await page.request.get('/api/services')).json()).services.some((row: { name: string }) => row.name === 'Servicio RF016')).toBe(false);
   await confirm(page, card, 'Reactivar servicio'); await expect(card).toContainText('Activo');
-  await tab(page, 'Barberos'); const create = page.getByRole('form', { name: 'Crear cuenta de barbero' }); await create.getByLabel('Nombre', { exact: true }).fill('Barbero RF016'); await create.getByLabel('Correo electrónico').fill('nuevo-rf016@example.test'); await create.getByLabel('Contraseña inicial', { exact: false }).fill('Sintetica-Cuenta-2026'); await create.getByLabel('Especialidad').fill('Cortes clásicos'); await formSave(create); await expect(create.getByRole('status')).toContainText('Cambios confirmados');
+  await tab(page, 'Barberos'); await page.locator('summary').filter({ hasText: 'Crear cuenta de barbero' }).click(); const create = page.getByRole('form', { name: 'Crear cuenta de barbero' }); await create.getByLabel('Nombre', { exact: true }).fill('Barbero RF016'); await create.getByLabel('Correo electrónico').fill('nuevo-rf016@example.test'); await create.getByLabel('Contraseña inicial', { exact: false }).fill('Sintetica-Cuenta-2026'); await create.getByLabel('Especialidad').fill('Cortes clásicos'); await formSave(create); await expect(create.getByRole('status')).toContainText('Cambios confirmados');
   const barber = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Barbero RF016', exact: true }) }); await barber.getByRole('button', { name: 'Editar Barbero RF016' }).click(); await barber.getByRole('form').getByLabel('Especialidad').fill('Barba y corte'); await formSave(barber.getByRole('form')); await expect(barber).toContainText('Barba y corte'); await confirm(page, barber, 'Desactivar barbero'); await expect(barber).toContainText('Inactivo'); await confirm(page, barber, 'Reactivar barbero'); await expect(barber).toContainText('Activo');
 });
 
 test('producto multipart: imagen, edición de costo nulo, baja/alta y movimientos paginados', async ({ page }) => {
-  await login(page); await tab(page, 'Productos'); const form = page.getByRole('form', { name: 'Crear producto' }); await form.getByLabel('Nombre del producto').fill('Producto RF016'); await form.getByLabel('Precio de venta').fill('9000'); await form.getByLabel('Costo unitario').fill('3000'); await form.getByLabel('Existencias').fill('4'); await form.getByLabel('Imagen nueva', { exact: false }).setInputFiles({ name: 'producto.png', mimeType: 'image/png', buffer: png }); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+  await login(page); await tab(page, 'Productos'); await page.locator('summary').filter({ hasText: 'Crear producto' }).click(); const form = page.getByRole('form', { name: 'Crear producto' }); await form.getByLabel('Nombre del producto').fill('Producto RF016'); await form.getByLabel('Precio de venta').fill('9000'); await form.getByLabel('Costo unitario').fill('3000'); await form.getByLabel('Existencias').fill('4'); await form.getByLabel('Imagen nueva', { exact: false }).setInputFiles({ name: 'producto.png', mimeType: 'image/png', buffer: png }); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
   const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Producto RF016', exact: true }) }); await expect(card.locator('img')).toBeVisible(); const src = await card.locator('img').getAttribute('src'); expect((await page.request.get(src!)).status()).toBe(200);
   await card.getByRole('button', { name: 'Editar Producto RF016' }).click(); const edit = card.getByRole('form'); await edit.getByLabel('Costo unitario').fill(''); await edit.getByLabel('Existencias').fill('7'); await edit.getByLabel('Imagen nueva', { exact: false }).setInputFiles({ name: 'producto2.png', mimeType: 'image/png', buffer: png }); await formSave(edit); await expect(card).toContainText('Costo desconocido'); await expect(card).toContainText('7 unidades');
   await confirm(page, card, 'Desactivar producto'); await expect(card).toContainText('Inactivo'); await confirm(page, card, 'Reactivar producto'); await expect(card).toContainText('Activo');
@@ -181,20 +181,20 @@ test('errores de archivo/proveedor conservan formulario y nunca simulan éxito',
 
 test('admin lee historial/fotos pero no crea documentos de barbero ni modifica puntos', async ({ page }) => {
   const [{ loyalty_points: pointsBefore }] = await sql('SELECT loyalty_points FROM clients WHERE id=?', [fixture.actors.cliente.profile]);
-  await login(page); await tab(page, 'Clientes'); await page.getByRole('combobox', { name: 'Cliente', exact: true }).selectOption(fixture.actors.cliente.profile); await expect(page.getByRole('heading', { name: 'Historial autorizado' })).toBeVisible(); await expect(page.getByRole('heading', { name: 'Fotos de atención' })).toBeVisible(); await expect(page.getByRole('form', { name: 'Subir foto de atención' })).toHaveCount(0);
+  await login(page); await tab(page, 'Clientes'); await selectClient(page, 'cliente'); await expect(page.getByRole('heading', { name: 'Historial autorizado' })).toBeVisible(); await expect(page.getByRole('heading', { name: 'Fotos de atención' })).toBeVisible(); await expect(page.getByRole('form', { name: 'Subir foto de atención' })).toHaveCount(0);
   expect((await api(page.context(), '/notes', { content: 'prohibida' })).status()).toBe(403); expect((await page.request.get('/api/notes')).status()).toBe(403); expect((await api(page.context(), '/photos', { client_id: fixture.actors.cliente.profile, type: 'antes' })).status()).toBe(403);
   expect((await sql('SELECT loyalty_points FROM clients WHERE id=?', [fixture.actors.cliente.profile]))[0].loyalty_points).toBe(pointsBefore);
 });
 
 test('administrador puede consultar y retirar foto ajena con confirmación', async ({ page }) => {
-  await login(page); await tab(page, 'Clientes'); await page.getByRole('combobox', { name: 'Cliente', exact: true }).selectOption(fixture.actors.cliente2.profile);
+  await login(page); await tab(page, 'Clientes'); await selectClient(page, 'cliente2');
   const card = page.locator('figure').filter({ has: page.locator('img[src="/uploads/haircuts/rf015-cliente2.png"]') }); await expect(card.locator('img')).toBeVisible(); expect((await page.request.get('/uploads/haircuts/rf015-cliente2.png')).status()).toBe(200);
   await confirm(page, card, 'Eliminar foto'); await expect(card).toHaveCount(0); expect((await page.request.get('/uploads/haircuts/rf015-cliente2.png')).status()).toBe(404);
 });
 
 test('promociones: alta, edición, estados y conteos, sin envío de campañas', async ({ page }) => {
-  await login(page); await tab(page, 'Promociones'); const form = page.getByRole('form', { name: 'Crear promoción' }); await form.getByLabel('Título').fill('Promo RF016'); await form.getByLabel('Descripción').fill('Oferta para revisión'); await form.getByLabel('Segmento').selectOption('vip'); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
-  const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Promo RF016', exact: true }) }); await card.getByRole('button', { name: 'Editar promoción' }).click(); const edit = card.getByRole('form'); await edit.getByLabel('Descripción').fill('Descripción corregida'); await formSave(edit); await expect(card).toContainText('Descripción corregida'); await confirm(page, card, 'Desactivar promoción'); await expect(card).toContainText('Inactiva'); await confirm(page, card, 'Reactivar promoción'); await expect(card).toContainText('Activa');
+  await login(page); await tab(page, 'Promociones'); await page.locator('summary').filter({ hasText: 'Crear promoción' }).click(); const form = page.getByRole('form', { name: 'Crear promoción' }); await form.getByLabel('Título').fill('Promo RF016'); await form.getByLabel('Descripción').fill('Oferta para revisión'); await form.getByLabel('Segmento').selectOption('vip'); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+  const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Promo RF016', exact: true }) }); await card.getByRole('button', { name: 'Editar promoción' }).click(); const edit = card.getByRole('form'); await edit.getByLabel('Descripción').fill('Descripción corregida'); await formSave(edit); await expect(card).toContainText('Descripción corregida'); await confirm(page, card, 'Desactivar promoción'); await expect(card).toContainText('Inactivo'); await confirm(page, card, 'Reactivar promoción'); await expect(card).toContainText('Activo');
   const counts = await (await page.request.get('/api/promotions/segments/counts')).json(); expect(Object.keys(counts.segments).sort()).toEqual(['inactivos', 'nuevos', 'recurrentes', 'vip']); await expect(page.getByText('Las promociones se registran', { exact: false })).toBeVisible();
 });
 
@@ -212,7 +212,7 @@ test('eventos entre dos sesiones actualizan lecturas y conservan edición sin du
 });
 
 test('caducidad retira datos privados, cancela suscripción y no persiste documentos en navegador', async ({ page }) => {
-  await login(page, 'barbero'); await tab(page, 'Clientes'); await page.getByRole('combobox', { name: 'Cliente', exact: true }).selectOption(fixture.actors.cliente.profile); await expect(page.getByRole('heading', { name: 'Historial autorizado' })).toBeVisible();
+  await login(page, 'barbero'); await tab(page, 'Clientes'); await selectClient(page, 'cliente'); await expect(page.getByRole('heading', { name: 'Historial autorizado' })).toBeVisible();
   expect(await page.evaluate(() => Object.keys(localStorage).filter(key => key !== 'bl_cart'))).toEqual([]); expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key !== 'react-router-scroll-positions'))).toEqual([]);
   await sql('UPDATE jwt_sessions SET revoked_at=UTC_TIMESTAMP(6) WHERE user_id=?', [fixture.actors.barbero.id]); await page.getByRole('button', { name: 'Actualizar panel' }).click(); await expect(page).toHaveURL(/ingresar/); await expect(page.getByRole('heading', { name: 'Historial autorizado' })).toHaveCount(0);
 });
@@ -224,8 +224,51 @@ test('admin finaliza en otra sesión y barbero recibe puntos/estado sin reenviar
   const context = await browser.newContext({ baseURL: fixture.url }); const peer = await context.newPage(); await login(peer); expect((await api(context, '/reservations/own-cancel/complete', {}, 'PATCH')).status()).toBe(200); await expect(card).toContainText('Completada', { timeout: 5000 }); await expect(card.getByLabel('Nueva fecha')).toHaveValue('2099-07-10'); expect(writes).toBe(0); expect((await sql('SELECT loyalty_points FROM clients WHERE id=?', [fixture.actors.cliente.profile]))[0].loyalty_points).toBe(before + 10); await context.close();
 });
 
+test('RF019 búsqueda normalizada, filtros, páginas y formulario recuperable', async ({ page }) => {
+  await login(page); await tab(page, 'Servicios');
+  const ids: string[] = [];
+  try {
+    const values: unknown[] = [];
+    for (let index = 0; index < 12; index++) {
+      const id = 'rf018-' + index; ids.push(id);
+      values.push(id, 'Diseño clásico ' + String(index).padStart(2, '0'), 5000, 30, index < 6 ? 1 : 0);
+    }
+    await sql('INSERT INTO services (id,name,price,duration_minutes,active) VALUES ' + ids.map(() => '(?,?,?,?,?)').join(','), values);
+    await page.getByRole('button', { name: 'Actualizar panel' }).click();
+    const collection = page.getByRole('region', { name: 'Listado de servicios' });
+    await collection.getByRole('searchbox').fill('diseno clasico');
+    await expect(collection.getByRole('status')).toContainText('12 de');
+    await collection.getByRole('button', { name: 'Siguiente', exact: true }).click();
+    await expect(collection.getByRole('navigation')).toContainText('Página 2 de 2');
+    await collection.getByLabel('Estado', { exact: true }).selectOption('Inactivo');
+    await expect(collection.getByRole('status')).toContainText('6 de');
+    await expect(collection.getByRole('heading', { name: 'Diseño clásico 06', exact: true })).toBeVisible();
+    await collection.getByRole('searchbox').fill('sin-coincidencias-rf018');
+    await expect(collection.getByRole('heading', { name: 'No encontramos coincidencias' })).toBeVisible();
+    await collection.getByRole('button', { name: 'Ver todos los registros' }).click();
+    await expect(collection.getByRole('searchbox')).toHaveValue('');
+    await page.locator('summary').filter({ hasText: 'Crear servicio' }).click();
+    const form = page.getByRole('form', { name: 'Crear servicio' });
+    await form.getByLabel('Nombre del servicio').fill('Borrador conservado');
+    await page.route('**/api/services', route => route.request().method() === 'POST' ? route.fulfill({ status: 409, contentType: 'application/json', body: '{}' }) : route.continue());
+    await formSave(form); await expect(form.getByRole('alert')).toBeVisible();
+    await expect(form.getByLabel('Nombre del servicio')).toHaveValue('Borrador conservado');
+    await page.getByRole('button', { name: 'Actualizar panel' }).click();
+    await expect(form.getByLabel('Nombre del servicio')).toHaveValue('Borrador conservado');
+    const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-019'); fs.mkdirSync(directory, { recursive: true });
+    await page.screenshot({ path: path.join(directory, 'admin-formulario-error-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.screenshot({ path: path.join(directory, 'admin-formulario-error-390.png'), fullPage: true });
+    await page.getByRole('button', { name: 'Secciones · Servicios' }).click();
+    await page.getByRole('navigation', { name: 'Secciones del panel' }).getByRole('link', { name: 'Productos', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Productos', exact: true })).toBeVisible();
+    await expect(page.getByRole('navigation', { name: 'Secciones del panel' })).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  } finally { if (ids.length) await sql('DELETE FROM services WHERE id IN (' + ids.map(() => '?').join(',') + ')', ids); }
+});
+
 test('revisión visual de todas las secciones, móvil/escritorio, teclado y enlaces directos', async ({ page }) => {
-  test.setTimeout(120000); const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-016'); fs.mkdirSync(directory, { recursive: true });
+  test.setTimeout(120000); const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-019'); fs.mkdirSync(directory, { recursive: true });
   for (const role of ['admin', 'barbero']) {
     await login(page, role); const tabs = role === 'admin' ? ['resumen', 'agenda', 'barberos', 'clientes', 'servicios', 'inventario', 'productos', 'compras', 'movimientos', 'pedidos', 'promociones'] : ['agenda', 'clientes', 'fotos', 'notas', 'materiales', 'stats', 'horario'];
     for (const width of [1440, 390]) {
@@ -235,7 +278,7 @@ test('revisión visual de todas las secciones, móvil/escritorio, teclado y enla
         // counter in this synthetic DB without changing production rate limits.
         await sql("DELETE FROM cache WHERE `key` LIKE '%api:%'");
         await page.goto((role === 'admin' ? '/administracion' : '/barbero') + '?tab=' + key); await expect(page.getByTestId('identity')).toBeVisible(); await expect(page.locator('.staff-section')).not.toContainText('Actualizando datos…', { timeout: 10000 }); await expect(page.locator('.staff-section').getByRole('alert')).toHaveCount(0);
-        if (key === 'clientes' || key === 'fotos') { await page.getByRole('combobox', { name: 'Cliente', exact: true }).selectOption(fixture.actors.cliente.profile); await expect(page.getByRole('heading', { name: 'Fotos de atención' })).toBeVisible(); }
+        if (key === 'clientes' || key === 'fotos') { await selectClient(page, 'cliente'); await expect(page.getByRole('heading', { name: 'Fotos de atención' })).toBeVisible(); }
         await expect(page.locator('.staff-section')).not.toContainText('Actualizando datos…');
         if (key === 'clientes' || key === 'fotos') {
           await expect(page.locator('.staff-detail figure img').first()).toBeVisible();

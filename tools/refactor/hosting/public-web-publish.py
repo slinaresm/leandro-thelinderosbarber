@@ -60,7 +60,7 @@ def store(ftp, name, payload):
     setup.upload_verified(ftp, name, payload, '644')
 
 
-def publish(public, private, directory, run_id):
+def publish(public, private, directory, run_id, front_update=False):
     names = sorted(file.relative_to(directory).as_posix() for file in directory.rglob('*') if file.is_file())
     if '.htaccess' not in names or 'gateway.php' not in names or 'index.html' not in names:
         raise setup.SetupError('PUBLIC_PACKAGE_INVALID')
@@ -68,16 +68,19 @@ def publish(public, private, directory, run_id):
         raise setup.SetupError('PUBLIC_PACKAGE_INVALID')
     allowed = LEGACY | {name.split('/')[0] for name in names}
     private.cwd('api/storage/framework')
-    if 'down' not in setup.entries(private):
+    maintenance = 'down' in setup.entries(private)
+    if not maintenance and not front_update:
         raise setup.SetupError('API_MAINTENANCE_REQUIRED')
     private.cwd('../../..')
     old_files, old_directories = inventory(public, allowed)
     backup = io.BytesIO()
+    previous = {}
     with tarfile.open(fileobj=backup, mode='w', format=tarfile.USTAR_FORMAT) as archive:
         for name, (size, _) in sorted(old_files.items()):
             payload = io.BytesIO()
             public.retrbinary('RETR ' + name, payload.write)
             content = payload.getvalue()
+            previous[name] = content
             if len(content) != size:
                 raise setup.SetupError('SOURCE_CHANGED')
             entry = tarfile.TarInfo(name)
@@ -90,6 +93,43 @@ def publish(public, private, directory, run_id):
     setup.upload_verified(private, backup_name, payload, '600')
     if inventory(public, allowed) != (old_files, old_directories):
         raise setup.SetupError('SOURCE_CHANGED')
+    if front_update:
+        # Keep all previous assets for open tabs and allow a rollback from memory.
+        # Only the public gateway is briefly closed; private maintenance is untouched.
+        if '.htaccess' not in previous:
+            raise setup.SetupError('PREVIOUS_RULES_REQUIRED')
+        overwritten = []
+        try:
+            store(public, '.htaccess', CLOSED)
+            for name in names:
+                if name == '.htaccess':
+                    continue
+                parent = ''
+                for part in name.split('/')[:-1]:
+                    parent = parent + '/' + part if parent else part
+                    if parent not in old_directories:
+                        public.mkd(parent)
+                        old_directories.append(parent)
+                if name in previous and previous[name] == (directory / name).read_bytes():
+                    continue
+                # Track before writing, including a partial or unverifiable transfer.
+                if name in previous:
+                    overwritten.append(name)
+                store(public, name, (directory / name).read_bytes())
+            store(public, '.htaccess', (directory / '.htaccess').read_bytes())
+        except Exception:
+            try:
+                for name in reversed(overwritten):
+                    store(public, name, previous[name])
+                store(public, '.htaccess', previous['.htaccess'])
+            except Exception:
+                raise setup.SetupError('FRONT_UPDATE_ROLLBACK_FAILED') from None
+            raise setup.SetupError('FRONT_UPDATE_FAILED_PREVIOUS_RESTORED') from None
+        return {'status': 'published-front-update', 'filesPublished': len(names),
+                'previousFilesBackedUp': len(old_files), 'backupPrivateFile': backup_name,
+                'backupSha256': hashlib.sha256(payload).hexdigest(), 'backupReadBackVerified': True,
+                'previousAssetsPreserved': True, 'apiMaintenanceUnchanged': True,
+                'apiMaintenanceActive': maintenance, 'databaseWrites': 0}
     store(public, '.htaccess', CLOSED)
     for name in sorted(old_files):
         if name != '.htaccess':
@@ -140,7 +180,8 @@ def main():
         if not run_id.isdigit():
             raise setup.SetupError('RUN_INVALID')
         private, public = connect('PRIVATE'), connect('PUBLIC')
-        report = publish(public, private, Path('.refactor-data/public-release/public'), run_id)
+        report = publish(public, private, Path('.refactor-data/public-release/public'), run_id,
+                         front_update=os.environ.get('FRONT_UPDATE') == 'true')
         code = 0
     except setup.SetupError as error:
         report['code'] = str(error)
