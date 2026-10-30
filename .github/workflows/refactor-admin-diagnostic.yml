@@ -1,0 +1,27 @@
+name: Diagnosticar acceso admin sin cambiar credenciales
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Comprobar bypass y CSRF sin leer la clave
+        env:
+          FTP_SERVER: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+        run: python3 tools/refactor/hosting/admin-http-probe.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: refactor-admin-diagnostic-${{ github.run_id }}
+          path: admin-http-probe.json
+          retention-days: 7
