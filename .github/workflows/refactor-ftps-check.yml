@@ -1,0 +1,102 @@
+name: Comprobar FTPS del refactor sin publicar
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refactor-ftps-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Comprobar TLS, autenticación y listado de ambas cuentas
+        env:
+          FTP_SERVER: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          FTP_PORT: ${{ secrets.REFACTOR_FTPS_PORT }}
+          PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+          PUBLIC_USER: ${{ secrets.REFACTOR_FTPS_PUBLIC_USERNAME }}
+          PUBLIC_PASSWORD: ${{ secrets.REFACTOR_FTPS_PUBLIC_PASSWORD }}
+        run: |
+          python3 - <<'PY'
+          import ftplib
+          import json
+          import os
+          import socket
+          import ssl
+          import sys
+
+          results = []
+          for role, expected_user, expected_root in [
+              ('PRIVATE', 'lb-api@linderosbarber.cl', '/home/leakmcl/apps/linderosbarber-php'),
+              ('PUBLIC', 'lb-web@linderosbarber.cl', '/home/leakmcl/public_html/linderosbarber.cl'),
+          ]:
+              ftp = None
+              stage = 'configuration'
+              result = {'account': role.lower(), 'status': 'failed'}
+              try:
+                  host = os.environ.get('FTP_SERVER', '')
+                  port = os.environ.get('FTP_PORT', '')
+                  user = os.environ.get(role + '_USER', '')
+                  password = os.environ.get(role + '_PASSWORD', '')
+                  if host != 'ftp.lea0km.cl' or port != '21' or user != expected_user or not password:
+                      raise ValueError('CONFIGURATION_INVALID')
+                  context = ssl.create_default_context()
+                  context.minimum_version = ssl.TLSVersion.TLSv1_2
+                  ftp = ftplib.FTP_TLS(context=context, timeout=25)
+                  stage = 'connect'
+                  ftp.connect(host, int(port))
+                  stage = 'tls'
+                  ftp.auth()
+                  result['tlsVerified'] = True
+                  stage = 'login'
+                  ftp.login(user, password)
+                  ftp.prot_p()
+                  ftp.set_pasv(True)
+                  stage = 'root'
+                  if ftp.pwd().rstrip('/') not in ('', expected_root):
+                      raise ValueError('ROOT_UNEXPECTED')
+                  stage = 'listing'
+                  entries = list(ftp.mlsd())
+                  result.update(status='passed', encryptedListing=True, entryCount=len(entries))
+              except ssl.SSLCertVerificationError:
+                  result['code'] = 'TLS_CERTIFICATE_INVALID'
+              except socket.gaierror:
+                  result['code'] = 'DNS_FAILED'
+              except (TimeoutError, socket.timeout):
+                  result['code'] = 'CONNECTION_TIMEOUT'
+              except ftplib.error_perm as error:
+                  number = str(error)[:3]
+                  result['code'] = 'FTP_' + number if number.isdigit() else 'FTP_ACCESS_FAILED'
+              except ValueError:
+                  result['code'] = 'CONFIGURATION_OR_ROOT_INVALID'
+              except Exception:
+                  result['code'] = 'FTPS_CHECK_FAILED'
+              finally:
+                  if ftp is not None:
+                      ftp.close()
+              result['stage'] = stage
+              results.append(result)
+
+          report = {'scope': 'read-only-ftps', 'filesWritten': 0, 'filesDeleted': 0,
+                    'physicalRoots': 'CPanel screenshots; FTP login alone cannot prove physical isolation',
+                    'accounts': results}
+          with open('ftps-check.json', 'w', encoding='utf-8') as output:
+              json.dump(report, output, indent=2)
+          print(json.dumps(report))
+          sys.exit(0 if all(item['status'] == 'passed' for item in results) else 1)
+          PY
+      - name: Conservar resultado sin credenciales ni nombres de archivos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: refactor-ftps-check-${{ github.run_id }}
+          path: ftps-check.json
+          retention-days: 7
+          if-no-files-found: error
