@@ -4,4 +4,4 @@
 ## 2. Integración
 - [x] 2.1 Integrar calendario administrativo con filtros y tarjetas existentes; comprobar navegación, recarga, vacíos, errores, teclado, acciones y móvil en navegador real.
 ## 3. Publicación
-- [ ] 3.1 Aprobar tipos, build y OpenSpec, publicar con respaldo y verificar archivos/HTTP; registrar evidencia y cerrar tareas.
+- [x] 3.1 Aprobar tipos, build y OpenSpec, publicar con respaldo y verificar archivos/HTTP; registrar evidencia y cerrar tareas.

@@ -1,0 +1,33 @@
+{
+  "scope": "RF-021-calendar-publication",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/ingresar",
+      "status": 200
+    },
+    {
+      "path": "/administracion?tab=agenda",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    }
+  ],
+  "calendarCode": [
+    "/assets/staff-panel-v9sSSvjQ.js"
+  ],
+  "calendarStyles": [
+    "/assets/staff-panel-DEmdxVa7.css"
+  ],
+  "status": "passed",
+  "authenticatedRemoteSmoke": false
+}

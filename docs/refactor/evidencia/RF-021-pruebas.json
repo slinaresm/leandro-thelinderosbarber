@@ -51,5 +51,6 @@
   },
   "typecheck": "passed",
   "build": "passed",
-  "published": false
+  "published": true,
+  "publicationRun": "https://github.com/slinaresm/leandro-thelinderosbarber/actions/runs/41124068929"
 }
