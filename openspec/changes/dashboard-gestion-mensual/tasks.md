@@ -4,4 +4,4 @@
 ## 2. Dashboard
 - [x] 2.1 Implementar filtros, indicadores, gráficos y tablas por barbero, estados y costos; verificar navegador real, errores, teclado y capturas móvil/escritorio.
 ## 3. Entrega
-- [ ] 3.1 Aprobar tipos, build, especificación y pruebas de integración; publicar el front con respaldo y verificar HTTP/código servido, registrando evidencia.
+- [x] 3.1 Aprobar tipos, build, especificación y pruebas de integración; publicar el front con respaldo y verificar HTTP/código servido, registrando evidencia.

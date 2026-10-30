@@ -1,0 +1,33 @@
+{
+  "scope": "RF-020-dashboard-publication",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/ingresar",
+      "status": 200
+    },
+    {
+      "path": "/administracion?tab=resumen",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    }
+  ],
+  "dashboardCode": [
+    "/assets/staff-panel-Bwpw-Wyw.js"
+  ],
+  "dashboardStyles": [
+    "/assets/staff-panel-n4t4Qwmo.css"
+  ],
+  "status": "passed",
+  "authenticatedRemoteSmoke": false
+}
