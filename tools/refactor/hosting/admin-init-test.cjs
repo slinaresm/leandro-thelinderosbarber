@@ -6,19 +6,20 @@ async function main(){
   const work=path.join(parent,candidates[0]),release=path.join(work,'release'),env=fs.readFileSync(path.join(release,'api/.env'),'utf8'),database=/^DB_DATABASE=(.+)$/m.exec(env)[1].trim();assert(/^rf017_install_[a-f0-9]+$/.test(database));
   const db=await mysql.createConnection({...credentials,database});const php=path.join(root,'.refactor-data/runtime/php84/php.exe');
   try{
-    const [[before]]=await db.query('SELECT COUNT(*) AS n FROM users');assert.equal(Number(before.n),0,'Se requiere fixture local sin usuarios; no alterar cuentas existentes.');
+    const [[before]]=await db.query('SELECT COUNT(*) AS n FROM users');assert.equal(Number(before.n),process.argv.includes('--reuse-fixture')?1:0,'El fixture no corresponde al caso esperado.');
+    if(process.argv.includes('--reuse-fixture')){const receipt=path.join(release,'rf017-admin-result.json');fs.renameSync(receipt,receipt+'.before-retry');}
     let source=fs.readFileSync(path.join(root,'tools/refactor/hosting/admin-init.php'),'utf8').replaceAll('leakmcl_linderos',database).replaceAll('/home/leakmcl/apps/linderosbarber-data',path.join(work,'data').replaceAll('\\','/'));
     const fake=`    Http::preventStrayRequests();
     Http::fake(function ($request) {
         $path = parse_url($request->url(), PHP_URL_PATH);
         if (str_starts_with($path, '/api/rf017-admin-')) { return Http::response('', 302); }
-        if ($path === '/api/auth/csrf') { return Http::response(['csrfToken' => 'fixture-token'], 200); }
+        if ($path === '/api/auth/csrf') { return Http::response(['csrfToken' => 'fixture-token'], 200, ['Set-Cookie' => 'bl_csrf=fixture-token; Path=/; Secure; HttpOnly']); }
         if ($path === '/api/auth/login') {
             $user = DB::table('users')->where('email', $request['email'])->first();
             if (! $user || ! password_verify($request['password'], $user->password_hash) || $request->header('X-CSRF-Token')[0] !== 'fixture-token') { throw new RuntimeException('fixture login invalid'); }
-            return Http::response(['user' => ['role' => $user->role]], 200);
+            return Http::response(['user' => ['role' => $user->role]], 200, ['Set-Cookie' => 'bl_session=fixture-session; Path=/; Secure; HttpOnly']);
         }
-        if ($path === '/api/auth/me') { return Http::response(['user' => ['role' => 'admin']], 200); }
+        if ($path === '/api/auth/me') { if (! str_contains($request->header('Cookie')[0] ?? '', 'bl_session=fixture-session')) { throw new RuntimeException('fixture session cookie missing'); } return Http::response(['user' => ['role' => 'admin']], 200); }
         if ($path === '/api/services/admin/all') { return Http::response(['services' => []], 200); }
         if ($path === '/api/barbers/me/profile') { return Http::response([], 403); }
         if ($path === '/api/auth/logout') { return Http::response('', 204); }
@@ -26,7 +27,7 @@ async function main(){
         throw new RuntimeException('fixture unexpected HTTP');
     });
 `;
-    assert(source.includes('    $jar = new CookieJar;'));source=source.replace('    $jar = new CookieJar;',fake+'    $jar = new CookieJar;');const helper=path.join(release,'rf017-admin-init.php');fs.writeFileSync(helper,source);
+    const anchor="    $origin = 'https://linderosbarber.cl';";assert(source.includes(anchor));source=source.replace(anchor,fake+anchor);const helper=path.join(release,'rf017-admin-init.php');fs.writeFileSync(helper,source);
     const run=()=>{const result=cp.spawnSync(php,[helper],{cwd:release,encoding:'utf8',windowsHide:true});assert(!result.stderr,result.stderr);return {exit:result.status,body:JSON.parse(result.stdout),stdout:result.stdout};};
     const created=run();assert.equal(created.exit,0,JSON.stringify(created.body));assert.equal(created.body.status,'passed');assert.equal(created.body.maintenanceActive,false);
     const accessFile=path.join(work,'data/admin-access.json'),access=JSON.parse(fs.readFileSync(accessFile));assert.equal(access.email,'admin@linderosbarber.cl');assert(access.password.length>=32);assert(!created.stdout.includes(access.password));

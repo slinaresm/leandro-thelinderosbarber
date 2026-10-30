@@ -2,6 +2,11 @@ name: Preparar primera cuenta administradora
 
 on:
   workflow_dispatch:
+    inputs:
+      retry:
+        description: Subir comprobación actualizada conservando la cuenta y clave
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -24,7 +29,7 @@ jobs:
           FTP_PORT: ${{ secrets.REFACTOR_FTPS_PORT }}
           PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
           PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
-        run: python3 tools/refactor/hosting/db-preflight-upload.py --admin
+        run: python3 tools/refactor/hosting/db-preflight-upload.py ${{ inputs.retry && '--admin-retry' || '--admin' }}
       - name: Conservar recibo sin credenciales
         if: always()
         uses: actions/upload-artifact@v4

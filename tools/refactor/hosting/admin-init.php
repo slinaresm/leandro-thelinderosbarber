@@ -1,8 +1,9 @@
 <?php
 
 use App\Commerce\AuditTrail;
-use GuzzleHttp\Cookie\CookieJar;
+use GuzzleHttp\Cookie\SetCookie;
 use Illuminate\Contracts\Console\Kernel;
+use Illuminate\Foundation\Http\MaintenanceModeBypassCookie;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
@@ -89,36 +90,76 @@ try {
     if ($kernel->call('down', ['--secret' => $secret]) !== 0) {
         throw new RuntimeException('MAINTENANCE_SETUP_FAILED');
     }
-    $jar = new CookieJar;
-    $client = Http::withOptions(['cookies' => $jar])->timeout(15)->withoutRedirecting();
     $origin = 'https://linderosbarber.cl';
-    if ($client->get($origin.'/'.$secret)->status() !== 302) {
-        throw new RuntimeException('HTTP_LOGIN_CHECK_FAILED');
-    }
-    $csrf = $client->get($origin.'/api/auth/csrf');
+    $bypass = MaintenanceModeBypassCookie::create($secret);
+    $cookieValues = ['laravel_maintenance' => rawurlencode($bypass->getValue())];
+    $send = function (string $method, string $path, array $data = [], ?string $csrfToken = null) use ($origin, &$cookieValues) {
+        $headers = ['Origin' => $origin, 'Accept' => 'application/json', 'User-Agent' => 'BarberLinderos-Setup/1.0', 'Cookie' => implode('; ', array_map(fn (string $name, string $value): string => $name.'='.$value, array_keys($cookieValues), $cookieValues))];
+        if ($csrfToken !== null) {
+            $headers['X-CSRF-Token'] = $csrfToken;
+        }
+        $response = Http::withHeaders($headers)->timeout(15)->withoutRedirecting()->send($method, $origin.$path, $method === 'POST' ? ['json' => $data] : []);
+        foreach ($response->toPsrResponse()->getHeader('Set-Cookie') as $header) {
+            $cookie = SetCookie::fromString($header);
+            $name = $cookie->getName();
+            if (! in_array($name, ['laravel_maintenance', 'bl_csrf', 'bl_session'], true)
+                || ($cookie->getDomain() && ltrim($cookie->getDomain(), '.') !== 'linderosbarber.cl')
+                || ($cookie->getPath() && $cookie->getPath() !== '/')) {
+                continue;
+            }
+            if ($cookie->getMaxAge() === 0 || ($cookie->getExpires() && $cookie->getExpires() < time())) {
+                unset($cookieValues[$name]);
+            } else {
+                $cookieValues[$name] = $cookie->getValue();
+            }
+        }
+
+        return $response;
+    };
+    $report['stage'] = 'csrf';
+    $csrf = $send('GET', '/api/auth/csrf');
+    $report['httpChecks']['csrf'] = $csrf->status();
     if (! $csrf->ok() || ! is_string($csrf->json('csrfToken'))) {
         throw new RuntimeException('HTTP_LOGIN_CHECK_FAILED');
     }
-    $login = $client->withHeaders(['Origin' => $origin, 'X-CSRF-Token' => $csrf->json('csrfToken')])->post($origin.'/api/auth/login', ['email' => $email, 'password' => $access['password']]);
-    if (! $login->ok() || $login->json('user.role') !== 'admin'
-        || $client->get($origin.'/api/auth/me')->json('user.role') !== 'admin'
-        || ! $client->get($origin.'/api/services/admin/all')->ok()
-        || $client->get($origin.'/api/barbers/me/profile')->status() !== 403) {
+    $report['stage'] = 'login';
+    $login = $send('POST', '/api/auth/login', ['email' => $email, 'password' => $access['password']], $csrf->json('csrfToken'));
+    $report['httpChecks']['login'] = $login->status();
+    if (! $login->ok() || $login->json('user.role') !== 'admin') {
         throw new RuntimeException('HTTP_LOGIN_CHECK_FAILED');
     }
-    $csrf = $client->get($origin.'/api/auth/csrf');
-    if ($client->withHeaders(['X-CSRF-Token' => $csrf->json('csrfToken')])->post($origin.'/api/auth/logout')->status() !== 204) {
+    $report['stage'] = 'session';
+    $me = $send('GET', '/api/auth/me');
+    $report['httpChecks']['session'] = $me->status();
+    if (! $me->ok() || $me->json('user.role') !== 'admin') {
+        throw new RuntimeException('HTTP_LOGIN_CHECK_FAILED');
+    }
+    $report['stage'] = 'roles';
+    $admin = $send('GET', '/api/services/admin/all');
+    $barber = $send('GET', '/api/barbers/me/profile');
+    $report['httpChecks']['admin'] = $admin->status();
+    $report['httpChecks']['barberDenied'] = $barber->status();
+    if (! $admin->ok() || $barber->status() !== 403) {
+        throw new RuntimeException('HTTP_LOGIN_CHECK_FAILED');
+    }
+    $report['stage'] = 'logout';
+    $csrf = $send('GET', '/api/auth/csrf');
+    $logout = $send('POST', '/api/auth/logout', [], $csrf->json('csrfToken'));
+    $report['httpChecks']['logout'] = $logout->status();
+    if ($logout->status() !== 204) {
         throw new RuntimeException('HTTP_LOGIN_CHECK_FAILED');
     }
     if ($kernel->call('up') !== 0) {
         throw new RuntimeException('API_OPEN_FAILED');
     }
     $opened = true;
-    if (! $client->get($origin.'/api/health')->ok()) {
+    $report['stage'] = 'public-health';
+    if (! $send('GET', '/api/health')->ok()) {
         throw new RuntimeException('PUBLIC_HEALTH_CHECK_FAILED');
     }
     $report += ['email' => $email, 'accessFile' => $accessFile, 'httpAdminLoginVerified' => true, 'adminRoleVerified' => true, 'publicHealthVerified' => true, 'maintenanceActive' => false];
     $report['status'] = 'passed';
+    $report['stage'] = 'complete';
     file_put_contents($receipt, json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
     chmod($receipt, 0600);
 } catch (Throwable $error) {

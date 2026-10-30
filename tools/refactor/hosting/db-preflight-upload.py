@@ -12,8 +12,9 @@ spec.loader.exec_module(setup)
 ftp = None
 report = {'status': 'failed', 'publicFilesWritten': 0, 'databaseWrites': 0, 'envModified': False}
 code = 1
-admin_mode = sys.argv[1:] == ['--admin']
-target = 'rf017-admin-init.php' if admin_mode else 'rf017-db-preflight.phar'
+retry_mode = sys.argv[1:] == ['--admin-retry']
+admin_mode = sys.argv[1:] in (['--admin'], ['--admin-retry'])
+target = 'rf017-admin-retry.php' if retry_mode else ('rf017-admin-init.php' if admin_mode else 'rf017-db-preflight.phar')
 try:
     if sys.argv[1:] and not admin_mode:
         raise setup.SetupError('MODE_INVALID')
