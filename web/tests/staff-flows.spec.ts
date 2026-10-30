@@ -200,9 +200,74 @@ test('promociones: alta, edición, estados y conteos, sin envío de campañas', 
 
 test('analítica período local, snapshots y costo desconocido se muestran sin convertirlo a cero', async ({ page }) => {
   await sql('INSERT INTO orders (id,client_id,buy_order,session_id,items,total,status,created_at) VALUES (?,?,?,?,?,?,?,?)', ['unknown-cost', fixture.actors.cliente.profile, 'SIN-COSTO-RF016', 'sintetica', JSON.stringify([{ productId: 'pomada', name: 'Pomada sin costo', quantity: 1, price: 10000 }]), 10000, 'paid', '2026-10-29 16:00:00']);
-  await login(page); const filter = page.getByRole('form', { name: 'Filtrar indicadores' }); await filter.getByLabel('Desde').fill('2026-10-29'); await filter.getByLabel('Hasta').fill('2026-10-29'); await filter.getByRole('button', { name: 'Aplicar período' }).click(); await expect(page.getByText('Período 2026-10-29 a 2026-10-29', { exact: false })).toBeVisible(); await expect(page.getByText('Desconocido: datos incompletos', { exact: true })).toHaveCount(2);
-  await filter.getByLabel('Hasta').fill('2026-10-28'); await filter.getByRole('button', { name: 'Aplicar período' }).click(); await expect(page.getByRole('alert')).toContainText('ambas fechas en orden'); expect((await page.request.get('/api/analytics/overview?from=2026-01-01&to=2027-12-31')).status()).toBe(400);
+  await login(page); const filter = page.getByRole('form', { name: 'Filtrar indicadores' }); await filter.getByLabel('Mes del dashboard').fill('2026-10'); await filter.getByRole('button', { name: 'Ver mes', exact: true }).click(); await expect(page.getByText('Desconocido: datos incompletos', { exact: true })).toHaveCount(2);
+  expect((await page.request.get('/api/analytics/overview?from=2026-01-01&to=2027-12-31')).status()).toBe(400);
   await sql("UPDATE services SET price=29000,name='Nombre modificado' WHERE id='rf014-service'"); await tab(page, 'Agenda'); await expect(page.getByTestId('staff-visit').filter({ hasText: '2099-07-01' })).toContainText('Corte original');
+});
+
+test('RF020 dashboard mensual reconcilia ingresos, equipo, gráficos y matriz anual', async ({ page }) => {
+  test.setTimeout(90000);
+  const visits: unknown[] = [], ids: string[] = [], orderIds: string[] = [], orderValues: unknown[] = [];
+  for (let index = 0; index < 12; index++) {
+    const date = '2040-' + String(index + 1).padStart(2, '0') + '-15';
+    for (const [actor, price] of [['barbero', 12000 + index * 1000], ['barbero2', 9000 + index * 750]] as const) {
+      const id = 'rf020-' + index + '-' + actor; ids.push(id);
+      visits.push(id, fixture.actors.cliente.profile, fixture.actors[actor].profile, 'rf014-service', date, '10:00', '10:45', 'Corte clásico', price, 45, date + ' 13:00:00', date + ' 13:45:00', 'completed');
+    }
+    const id = 'rf020-order-' + index; orderIds.push(id);
+    orderValues.push(id, fixture.actors.cliente.profile, id, id, JSON.stringify([{ productId: 'pomada', name: 'Pomada snapshot', quantity: 1, price: 5000 + index * 300, unitCost: 2000 }]), 5000 + index * 300, 'paid', date + ' 15:00:00');
+  }
+  try {
+    await sql('INSERT INTO reservations (id,client_id,barber_id,service_id,date,start_time,end_time,service_name_snapshot,service_price_snapshot,service_duration_snapshot,starts_at,ends_at,status) VALUES ' + ids.map(() => '(?,?,?,?,?,?,?,?,?,?,?,?,?)').join(','), visits);
+    await sql('INSERT INTO orders (id,client_id,buy_order,session_id,items,total,status,created_at) VALUES ' + orderIds.map(() => '(?,?,?,?,?,?,?,?)').join(','), orderValues);
+    await login(page); await page.goto('/administracion?tab=resumen&month=2040-10');
+    const metric = page.getByRole('article', { name: 'Ingresos totales del mes', exact: true });
+    await expect(metric).toContainText('$44.450');
+    await expect(page.getByRole('article', { name: 'Ingresos por servicios', exact: true })).toContainText('$36.750');
+    const chart = page.getByRole('region', { name: 'Evolución mensual de ingresos' });
+    await expect(chart.getByRole('button')).toHaveCount(12);
+    await expect(chart).toContainText('$447.300');
+    await chart.getByRole('combobox', { name: 'Ver evolución de' }).selectOption(fixture.actors.barbero.profile);
+    await expect(chart).toContainText('$210.000');
+    await chart.getByRole('combobox', { name: 'Ver evolución de' }).selectOption('');
+    const matrix = page.getByRole('table', { name: 'Ingresos por barbero de enero a diciembre de 2040, en pesos chilenos' });
+    await expect(matrix.getByRole('row').filter({ hasText: 'Cuenta sintética barbero2' })).toContainText('$157.500');
+    await expect(matrix.getByRole('row').filter({ hasText: 'Total servicios' })).toContainText('$367.500');
+    const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-020'); fs.mkdirSync(directory, { recursive: true });
+    await page.screenshot({ path: path.join(directory, 'dashboard-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: path.join(directory, 'dashboard-390.png'), fullPage: true });
+    const january = chart.getByRole('button', { name: /^enero de 2040:/ });
+    await january.focus(); await page.keyboard.press('Enter');
+    await expect(page).toHaveURL(/month=2040-01/); await expect(metric).toContainText('$26.000');
+    await page.reload(); await expect(page.getByLabel('Mes del dashboard')).toHaveValue('2040-01'); await expect(metric).toContainText('$26.000');
+  } finally {
+    await sql('DELETE FROM reservations WHERE id IN (' + ids.map(() => '?').join(',') + ')', ids);
+    await sql('DELETE FROM orders WHERE id IN (' + orderIds.map(() => '?').join(',') + ')', orderIds);
+  }
+});
+
+test('RF020 lecturas fallidas no presentan ingresos cero y permiten recuperar el dashboard', async ({ page }) => {
+  await page.route('**/api/reservations', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }));
+  await login(page);
+  await expect(page.getByRole('alert')).toContainText('El servicio no está disponible');
+  await expect(page.getByRole('article', { name: 'Ingresos totales del mes', exact: true })).toHaveCount(0);
+  await page.unroute('**/api/reservations');
+  await page.getByRole('button', { name: 'Reintentar consulta' }).click();
+  await expect(page.getByRole('article', { name: 'Ingresos totales del mes', exact: true })).toBeVisible();
+  await page.route('**/api/analytics/overview?*', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }));
+  await page.getByRole('button', { name: 'Mes siguiente', exact: false }).click();
+  await expect(page.getByRole('region', { name: 'Costos y contexto comercial' }).getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Margen bruto de tienda', exact: true })).toHaveCount(0);
+});
+
+test('RF020 mes sin actividad conserva doce meses, equipo y ceros explícitos', async ({ page }) => {
+  await login(page); await page.goto('/administracion?tab=resumen&month=2050-02');
+  await expect(page.getByRole('article', { name: 'Ingresos totales del mes', exact: true })).toContainText('$0');
+  await expect(page.getByRole('status').filter({ hasText: 'Este mes aún no tiene actividad' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Evolución mensual de ingresos' }).getByRole('button')).toHaveCount(12);
+  await expect(page.getByRole('table', { name: 'Resultados por barbero · febrero de 2050' }).getByRole('row')).toHaveCount(4);
 });
 
 test('eventos entre dos sesiones actualizan lecturas y conservan edición sin duplicar acciones', async ({ page, browser }) => {

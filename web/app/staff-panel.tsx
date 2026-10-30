@@ -10,7 +10,7 @@ import { StaffMovements, StaffOrders, StaffPurchases } from './staff-commerce';
 const adminTabs = [['resumen', 'Resumen'], ['agenda', 'Agenda'], ['barberos', 'Barberos'], ['clientes', 'Clientes'], ['servicios', 'Servicios'], ['inventario', 'Materiales'], ['productos', 'Productos'], ['compras', 'Compras'], ['movimientos', 'Movimientos'], ['pedidos', 'Pedidos'], ['promociones', 'Promociones']];
 const barberTabs = [['agenda', 'Agenda'], ['clientes', 'Clientes'], ['fotos', 'Fotos'], ['notas', 'Notas privadas'], ['materiales', 'Materiales'], ['stats', 'Estadísticas'], ['horario', 'Horario']];
 const sectionInfo: Record<string, string> = {
-  resumen: 'Una mirada a las reservas, los ingresos y la actividad de tu negocio.',
+  resumen: 'El estado de tu barbería, los ingresos de cada mes y el rendimiento de tu equipo.',
   agenda: 'Organiza las atenciones y revisa los próximos compromisos.',
   barberos: 'Gestiona tu equipo, sus especialidades y horarios de atención.',
   clientes: 'Encuentra a tus clientes y consulta su historial de atención.',

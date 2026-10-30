@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-30",
+  "database": "rf016_test_7cfcadf678",
+  "node": "v22.22.0",
+  "browser": "Microsoft Edge / Chromium real, Playwright 1.64.1",
+  "backend": "PHP 8.4 / MariaDB 10.6.28 real",
+  "status": "passed",
+  "stats": {
+    "startTime": "2026-10-30T19:45:34.039Z",
+    "duration": 37822.736,
+    "expected": 6,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "rutas por rol, alias con sección, recarga y panel ajeno",
+      "passed": true
+    },
+    {
+      "title": "mutaciones administrativas rechazan otros roles aunque invoquen la API directamente",
+      "passed": true
+    },
+    {
+      "title": "analítica período local, snapshots y costo desconocido se muestran sin convertirlo a cero",
+      "passed": true
+    },
+    {
+      "title": "RF020 dashboard mensual reconcilia ingresos, equipo, gráficos y matriz anual",
+      "passed": true
+    },
+    {
+      "title": "RF020 lecturas fallidas no presentan ingresos cero y permiten recuperar el dashboard",
+      "passed": true
+    },
+    {
+      "title": "RF020 mes sin actividad conserva doce meses, equipo y ceros explícitos",
+      "passed": true
+    }
+  ],
+  "scope": "RF-020 dashboard mensual",
+  "modelTests": {
+    "passed": 5,
+    "command": "node --experimental-strip-types --test tools/refactor/web/dashboard-test.mjs"
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "published": false
+}

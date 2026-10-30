@@ -1,0 +1,7 @@
+# RF-020 · Dashboard mensual del negocio
+
+Resumen se convierte en dashboard con mes seleccionado, total mensual de servicios y tienda, comparación con mes anterior, doce meses de evolución, ingresos mensuales de cada barbero, detalle del equipo y estado de reservas/pedidos. Cambio OpenSpec: dashboard-gestion-mensual.
+
+Criterios monetarios: servicios completados por fecha local de atención y precio snapshot de la API; tienda solo pedidos pagados, por mes local de creación coherente con analítica existente. No representa fecha efectiva de cobro. Ticket medio de servicios = ingreso por servicios / atenciones completadas. Ventas de tienda sin asignación inventada a barberos. Costos y margen comercial desconocidos permanecen desconocidos; no son utilidad neta del negocio. Mes actual parcial frente al mes anterior completo.
+
+El modelo se deriva de lecturas administrativas existentes y no crea mutaciones. La API aplica roles. Los GET independientes no son un snapshot atómico conjunto. Sin dependencias nuevas. Validación local aprobada: cinco pruebas de modelo, seis escenarios de integración con PHP/MariaDB y navegador real, typecheck/build y capturas a 1440/390 px. Ver [evidencia](../evidencia/RF-020-pruebas.json). Publicación en curso.

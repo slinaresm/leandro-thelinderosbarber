@@ -1,0 +1,86 @@
+.staff-dashboard { --dash-gold:#dfbb80; --dash-teal:#80c5bc; display:grid; gap:24px; }
+.staff-page .dashboard-eyebrow { color:#b6a07d; font-size:10px; letter-spacing:.13em; font-weight:600; margin:0 0 8px; text-transform:uppercase; }
+.dashboard-period { display:grid; grid-template-columns:1fr auto; gap:12px 24px; align-items:center; background:linear-gradient(120deg,#262d33,#1b2228); border:1px solid #ffffff20; border-radius:10px; padding:22px 24px; }
+.vintage-home .dashboard-period h3 { text-transform:capitalize; font-size:25px; margin:0; }
+.staff-page .dashboard-period p:last-child { font-size:11px; color:#aebccb; margin:8px 0 0; line-height:1.6; }
+.dashboard-period form { display:flex; flex-wrap:wrap; align-items:end; gap:8px; }
+.staff-page .dashboard-period label { margin:0 0 3px; }
+.staff-page .dashboard-period input { margin-top:6px; color-scheme:dark; }
+.staff-page .dashboard-period button { margin:0 0 3px; }
+.dashboard-month-nav { grid-column:1/-1; display:flex; justify-content:space-between; padding-top:14px; border-top:1px solid #ffffff12; }
+.staff-page .dashboard-month-nav button { background:transparent; border-color:transparent; padding:7px 0; font-size:11px; min-height:36px; }
+.dashboard-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+.dashboard-metric { background:#20272e; border:1px solid #ffffff1c; border-radius:9px; padding:22px 20px; min-width:0; }
+.staff-page .dashboard-metric>p { color:#bbc7d2; font-size:11px; margin:0 0 14px; line-height:1.4; }
+.dashboard-metric>strong { color:#f4eee2; display:block; font:600 clamp(21px,2.2vw,32px)/1.15 Arial,sans-serif; letter-spacing:-.04em; overflow-wrap:anywhere; font-variant-numeric:tabular-nums; }
+.dashboard-metric>small { color:#a7b4c2; font-size:10px; line-height:1.65; margin-top:14px; display:block; }
+.dashboard-metric.is-featured { border-color:#d9b67c65; background:linear-gradient(135deg,#352d24,#252725); box-shadow:inset 0 2px #dfbb80; }
+.dashboard-metric.is-featured>strong { color:#f6d79d; }
+.dashboard-positive { color:#a0d9b8; }.dashboard-negative { color:#f4b0b8; }
+.dashboard-kpis-compact .dashboard-metric { background:transparent; padding:17px 20px; }
+.dashboard-kpis-compact .dashboard-metric>strong { font-size:26px; }
+.dashboard-kpis-compact .dashboard-metric>p { margin-bottom:10px; }
+.dashboard-main-grid { display:grid; grid-template-columns:minmax(0,1.4fr) minmax(0,1fr); gap:20px; align-items:start; }
+.dashboard-secondary-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.dashboard-card { background:#1c2329; border:1px solid #ffffff1c; border-radius:10px; padding:24px; min-width:0; }
+.dashboard-card-heading { display:flex; align-items:start; justify-content:space-between; flex-wrap:wrap; gap:14px; margin-bottom:20px; }
+.vintage-home .dashboard-card h3 { font-size:21px; line-height:1.25; margin:0 0 7px; letter-spacing:-.02em; }
+.staff-page .dashboard-card-heading>div>p:last-child { font-size:11px; color:#a9b7c5; margin:0; line-height:1.65; }
+.staff-page .dashboard-card-heading label { margin:0; font-size:10px; max-width:220px; flex:1 1 160px; }
+.staff-page .dashboard-card-heading select { font-size:11px; min-height:40px; }
+.dashboard-card-heading>a { font-size:11px; color:#dbbc88; min-height:40px; display:flex; align-items:center; }
+.dashboard-chart-total { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:26px; }
+.dashboard-chart-total strong { font:600 28px/1.2 Arial,sans-serif; color:#f1e6d1; letter-spacing:-.03em; }
+.dashboard-chart-total>span { font-size:10px; color:#a5b2c0; }
+.dashboard-chart-scale { display:flex; justify-content:space-between; font-size:9px; color:#96a7b9; margin-bottom:10px; }
+.dashboard-bars { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); gap:7px; padding-top:10px; border-top:1px dashed #ffffff24; background:repeating-linear-gradient(to top,transparent 0,transparent 56px,#ffffff08 56px,#ffffff08 57px); }
+.staff-page .dashboard-bars>button { display:flex; flex-direction:column; gap:10px; align-items:center; min-width:0; padding:0 1px; margin:0; border:0; border-radius:4px; background:transparent; min-height:0; }
+.staff-page .dashboard-bars>button:hover:not(:disabled) { background:#ffffff0b; border-color:transparent; }
+.dashboard-bar-track { display:flex; align-items:end; width:100%; height:190px; border-bottom:1px solid #ffffff33; }
+.dashboard-bar-stack { display:flex; flex-direction:column; width:100%; border-radius:4px 4px 0 0; overflow:hidden; opacity:.7; }
+.dashboard-bar-stack>span { display:block; min-height:0; flex-basis:0; }
+.dashboard-bar-services { background:var(--dash-gold); }.dashboard-bar-shop { background:var(--dash-teal); }
+.dashboard-bars>.is-selected .dashboard-bar-stack { opacity:1; box-shadow:0 0 20px #e0b87b18; }
+.dashboard-bar-month { color:#9eafbf; font-size:9px; font-weight:400; }
+.dashboard-bars>.is-selected .dashboard-bar-month { color:#ffe0aa; font-weight:700; }
+.dashboard-legend { display:flex; flex-wrap:wrap; gap:9px 18px; margin-top:22px; font-size:10px; color:#b6c2d0; }
+.dashboard-legend>span { display:flex; gap:6px; align-items:center; }
+.dashboard-legend>span:last-child { color:#9aabbd; }
+.dashboard-legend i { height:7px; width:7px; border-radius:2px; display:inline-block; }.services-dot{background:var(--dash-gold)}.shop-dot{background:var(--dash-teal)}
+.dashboard-data-details { border-top:1px solid #ffffff15; margin-top:20px; padding-top:14px; font-size:11px; color:#abbccc; }
+.dashboard-data-details summary,.dashboard-method summary { cursor:pointer; padding:8px 0; min-height:30px; }
+.staff-page .dashboard-team-list { list-style:none; padding:0; margin:0; display:grid; gap:24px; }
+.dashboard-team-identity { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+.dashboard-rank { font-size:10px; color:#9b8c76; }
+.dashboard-team-identity>div { flex:1; min-width:0; }
+.dashboard-team-identity strong { font-size:12px; color:#f1e8d9; font-weight:500; overflow-wrap:anywhere; }
+.dashboard-team-identity small { display:block; font-size:10px; color:#a9b8c7; line-height:1.6; margin-top:3px; }
+.dashboard-team-identity>b { color:#edcb95; font-size:13px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.dashboard-team-track { height:5px; background:#ffffff09; border-radius:4px; margin-left:27px; overflow:hidden; }
+.dashboard-team-track>span { display:block; background:linear-gradient(90deg,#b89059,#e0bb80); height:100%; border-radius:4px; }
+.dashboard-card .staff-table { margin-bottom:0; }
+.dashboard-card caption { text-align:left; padding:12px 16px; color:#acbac9; font-size:10px; }
+.dashboard-card .staff-table th[scope=row] { white-space:normal; min-width:145px; background:transparent; color:#e3e9ed; font-size:12px; }
+.dashboard-card tfoot td,.dashboard-card tfoot th { color:#f4d69e; background:#d8b2780a; font-weight:600; }
+.dashboard-card .dashboard-money { color:#f1d3a1; font-weight:600; white-space:nowrap; }
+.dashboard-year-table td { white-space:nowrap; font-size:11px; font-variant-numeric:tabular-nums; }
+.dashboard-year-table .is-current-month { background:#d5b07d12; color:#eed0a0; }
+.dashboard-attention { display:grid; gap:12px; }
+.dashboard-attention a { display:flex; align-items:center; gap:18px; text-decoration:none; background:#ffffff04; border:1px solid #ffffff12; border-radius:7px; padding:16px; }
+.dashboard-attention a:hover { border-color:#d5b07d66; }
+.dashboard-attention strong { font:600 25px/1 Arial,sans-serif; color:#edc890; }
+.dashboard-attention span { font-size:12px; color:#d7e0e8; }.dashboard-attention small{display:block;color:#99adbf;font-size:10px;margin-top:6px;line-height:1.5}
+.staff-page .dashboard-service-list { list-style:none; margin:0; padding:0; }
+.dashboard-service-list li { display:flex; justify-content:space-between; align-items:center; gap:20px; padding:12px 0; border-bottom:1px solid #ffffff12; font-size:12px; }
+.dashboard-service-list small { display:block; color:#9dacbc; font-size:10px; }
+.dashboard-service-list strong { color:#e7c693; white-space:nowrap; font-size:12px; }
+.dashboard-finance { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.dashboard-finance .dashboard-metric { background:#ffffff03; padding:18px 16px; }
+.dashboard-finance .dashboard-metric>strong { font-size:20px; letter-spacing:-.025em; }
+.staff-page .dashboard-muted { color:#a1b1c1; font-size:11px; line-height:1.8; margin:16px 0 0; }
+.staff-page .dashboard-notice { border:1px solid #d4b37b44; background:#d4b37b0a; color:#ddc59e; padding:15px 20px; border-radius:8px; font-size:12px; margin:0; }
+.dashboard-method { color:#a4b4c5; font-size:11px; border-top:1px solid #ffffff18; padding-top:10px; }
+.staff-page .dashboard-method p { font-size:12px; color:#aabacb; line-height:1.9; }
+@media(max-width:1200px) { .dashboard-kpis,.dashboard-finance{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-main-grid{grid-template-columns:1fr}.dashboard-period{grid-template-columns:1fr}.dashboard-card-heading{flex-wrap:wrap} }
+@media(max-width:720px) { .staff-dashboard{gap:18px}.dashboard-period,.dashboard-card{padding:19px 16px}.dashboard-period form{gap:8px}.dashboard-period form>label{flex-basis:100%}.dashboard-period input{width:100%}.dashboard-kpis{gap:10px}.dashboard-metric{padding:18px 14px}.dashboard-metric>strong{font-size:23px}.dashboard-metric>small{font-size:10px}.dashboard-kpis-compact .dashboard-metric{padding:15px 13px}.dashboard-secondary-grid{grid-template-columns:1fr}.dashboard-finance{grid-template-columns:1fr 1fr}.dashboard-finance .dashboard-metric{padding:14px 12px}.dashboard-finance .dashboard-metric>strong{font-size:17px}.dashboard-bars{gap:5px}.dashboard-bar-track{height:150px}.dashboard-bar-month{font-size:8px}.dashboard-card-heading label{max-width:none;flex-basis:100%}.dashboard-team-identity{gap:10px}.dashboard-chart-total strong{font-size:25px}.dashboard-card .staff-table th,.dashboard-card .staff-table td{padding:12px}.dashboard-month-nav{gap:10px} }
+@media(max-width:360px) { .dashboard-kpis,.dashboard-finance{grid-template-columns:1fr}.dashboard-bars{gap:3px}.dashboard-bar-month{font-size:7px} }
