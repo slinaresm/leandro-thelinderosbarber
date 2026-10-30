@@ -1,0 +1,929 @@
+{
+  "users": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "name": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "email": {
+      "kind": "email",
+      "nullable": false,
+      "unique": true
+    },
+    "password_hash": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "role": {
+      "kind": "enum",
+      "nullable": false,
+      "unique": false,
+      "enum": [
+        "admin",
+        "barbero",
+        "cliente"
+      ]
+    },
+    "phone": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    },
+    "deleted_at": {
+      "kind": "instant",
+      "nullable": true
+    }
+  },
+  "barbers": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "user_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": true,
+      "references": "users",
+      "onDelete": "CASCADE"
+    },
+    "specialty": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "photo_url": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "active": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 1,
+      "boolean": true,
+      "min": 0
+    },
+    "work_start": {
+      "kind": "time",
+      "nullable": true,
+      "unique": false,
+      "default": "09:00"
+    },
+    "work_end": {
+      "kind": "time",
+      "nullable": true,
+      "unique": false,
+      "default": "22:00"
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "clients": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "user_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": true,
+      "references": "users",
+      "onDelete": "CASCADE"
+    },
+    "loyalty_points": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 0,
+      "min": 0
+    },
+    "loyalty_level": {
+      "kind": "enum",
+      "nullable": true,
+      "unique": false,
+      "enum": [
+        "Bronce",
+        "Plata",
+        "Oro",
+        "Black"
+      ],
+      "default": "Bronce"
+    },
+    "birthday": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "services": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "name": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "price": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 0
+    },
+    "duration_minutes": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 1
+    },
+    "description": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "active": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 1,
+      "boolean": true,
+      "min": 0
+    }
+  },
+  "reservations": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "client_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "clients",
+      "onDelete": "CASCADE"
+    },
+    "barber_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "barbers",
+      "onDelete": "CASCADE"
+    },
+    "service_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "services",
+      "onDelete": "RESTRICT"
+    },
+    "date": {
+      "kind": "date",
+      "nullable": false,
+      "unique": false
+    },
+    "start_time": {
+      "kind": "time",
+      "nullable": false,
+      "unique": false
+    },
+    "end_time": {
+      "kind": "time",
+      "nullable": false,
+      "unique": false
+    },
+    "status": {
+      "kind": "enum",
+      "nullable": false,
+      "unique": false,
+      "enum": [
+        "confirmed",
+        "cancelled",
+        "completed",
+        "no_show"
+      ],
+      "default": "confirmed"
+    },
+    "notes": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "notified_24h": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 0,
+      "boolean": true,
+      "min": 0
+    },
+    "notified_2h": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 0,
+      "boolean": true,
+      "min": 0
+    },
+    "service_name_snapshot": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "service_price_snapshot": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "min": 0
+    },
+    "service_duration_snapshot": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "min": 0
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    },
+    "updated_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    },
+    "starts_at": {
+      "kind": "instant",
+      "nullable": true
+    },
+    "ends_at": {
+      "kind": "instant",
+      "nullable": true
+    }
+  },
+  "inventory": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "product_name": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "quantity": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "default": 0,
+      "min": 0
+    },
+    "min_threshold": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "default": 5,
+      "min": 0
+    },
+    "requested_by": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "barbers",
+      "onDelete": "RESTRICT"
+    },
+    "request_status": {
+      "kind": "enum",
+      "nullable": true,
+      "unique": false,
+      "enum": [
+        "none",
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "none"
+    },
+    "updated_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    },
+    "product_id": {
+      "kind": "id",
+      "nullable": true,
+      "unique": true,
+      "references": "products",
+      "onDelete": "SET NULL"
+    }
+  },
+  "haircut_photos": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "barber_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "barbers",
+      "onDelete": "CASCADE"
+    },
+    "client_id": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "clients",
+      "onDelete": "RESTRICT"
+    },
+    "reservation_id": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "photo_url": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "type": {
+      "kind": "enum",
+      "nullable": true,
+      "unique": false,
+      "enum": [
+        "antes",
+        "despues"
+      ]
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "notes": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "barber_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "barbers",
+      "onDelete": "CASCADE"
+    },
+    "client_id": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "clients",
+      "onDelete": "RESTRICT"
+    },
+    "content": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "promotions": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "title": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "description": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "segment": {
+      "kind": "enum",
+      "nullable": true,
+      "unique": false,
+      "enum": [
+        "nuevos",
+        "recurrentes",
+        "inactivos",
+        "vip",
+        "cumpleanos",
+        "todos"
+      ]
+    },
+    "active": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 1,
+      "boolean": true,
+      "min": 0
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "notifications": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "user_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "users",
+      "onDelete": "CASCADE"
+    },
+    "reservation_id": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "channel": {
+      "kind": "enum",
+      "nullable": false,
+      "unique": false,
+      "enum": [
+        "email",
+        "whatsapp",
+        "sms"
+      ],
+      "default": "email"
+    },
+    "type": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "message": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "status": {
+      "kind": "enum",
+      "nullable": false,
+      "unique": false,
+      "enum": [
+        "sent",
+        "simulated",
+        "failed"
+      ],
+      "default": "sent"
+    },
+    "read": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 0,
+      "boolean": true,
+      "min": 0
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "products": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "name": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "description": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "price": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 0
+    },
+    "image_url": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "stock": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "default": 0,
+      "min": 0
+    },
+    "category": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "active": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "default": 1,
+      "boolean": true,
+      "min": 0
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    },
+    "cost_price": {
+      "kind": "integer",
+      "nullable": true,
+      "min": 0
+    },
+    "updated_at": {
+      "kind": "instant",
+      "nullable": true
+    }
+  },
+  "orders": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "client_id": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "clients",
+      "onDelete": "RESTRICT"
+    },
+    "buy_order": {
+      "kind": "key",
+      "nullable": false,
+      "unique": true
+    },
+    "session_id": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "items": {
+      "kind": "json",
+      "nullable": false,
+      "unique": false
+    },
+    "total": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 0
+    },
+    "status": {
+      "kind": "enum",
+      "nullable": false,
+      "unique": false,
+      "enum": [
+        "pending",
+        "paid",
+        "failed",
+        "cancelled"
+      ],
+      "default": "pending"
+    },
+    "mp_preference_id": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "mp_payment_id": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "payment_detail": {
+      "kind": "json",
+      "nullable": true,
+      "unique": false
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    },
+    "updated_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    },
+    "webpay_token": {
+      "kind": "text",
+      "nullable": true
+    }
+  },
+  "order_items": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "order_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "orders",
+      "onDelete": "RESTRICT"
+    },
+    "product_id": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "products",
+      "onDelete": "RESTRICT"
+    },
+    "product_name": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "unit_price": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 0
+    },
+    "quantity": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 1
+    },
+    "unit_cost": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "min": 0
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "purchase_items": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "purchase_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "purchases",
+      "onDelete": "RESTRICT"
+    },
+    "product_id": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "products",
+      "onDelete": "RESTRICT"
+    },
+    "product_name": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "quantity": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 1
+    },
+    "unit_cost": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 0
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "stock_movements": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "product_id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false,
+      "references": "products",
+      "onDelete": "RESTRICT"
+    },
+    "movement_type": {
+      "kind": "enum",
+      "nullable": false,
+      "unique": false,
+      "enum": [
+        "purchase",
+        "sale",
+        "adjustment",
+        "return",
+        "waste"
+      ]
+    },
+    "quantity_delta": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false
+    },
+    "unit_cost": {
+      "kind": "integer",
+      "nullable": true,
+      "unique": false,
+      "min": 0
+    },
+    "reference_type": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "reference_id": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "created_by": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "users",
+      "onDelete": "SET NULL"
+    },
+    "note": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "audit_log": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "actor_user_id": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "users",
+      "onDelete": "SET NULL"
+    },
+    "entity_type": {
+      "kind": "key",
+      "nullable": false,
+      "unique": false
+    },
+    "entity_id": {
+      "kind": "key",
+      "nullable": false,
+      "unique": false
+    },
+    "action": {
+      "kind": "text",
+      "nullable": false,
+      "unique": false
+    },
+    "before_data": {
+      "kind": "json",
+      "nullable": true,
+      "unique": false
+    },
+    "after_data": {
+      "kind": "json",
+      "nullable": true,
+      "unique": false
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  },
+  "purchases": {
+    "id": {
+      "kind": "id",
+      "nullable": false,
+      "unique": false
+    },
+    "supplier": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "invoice_number": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "invoice_file_url": {
+      "kind": "text",
+      "nullable": true,
+      "unique": false
+    },
+    "items": {
+      "kind": "json",
+      "nullable": false,
+      "unique": false
+    },
+    "total_cost": {
+      "kind": "integer",
+      "nullable": false,
+      "unique": false,
+      "min": 0
+    },
+    "created_by": {
+      "kind": "id",
+      "nullable": true,
+      "unique": false,
+      "references": "users",
+      "onDelete": "RESTRICT"
+    },
+    "created_at": {
+      "kind": "instant",
+      "nullable": true,
+      "unique": false,
+      "default": "CURRENT_TIMESTAMP"
+    }
+  }
+}

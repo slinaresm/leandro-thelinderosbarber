@@ -1,0 +1,62 @@
+name: Subir API privada sin publicar React
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Escribe PREPARAR_API_PRIVADA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refactor-hosting-production
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: inputs.confirmation == 'PREPARAR_API_PRIVADA'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, gd, fileinfo, curl, openssl
+          tools: composer:v2
+          coverage: none
+      - name: Instalar dependencias de produccion sin scripts
+        working-directory: api
+        run: composer install --no-dev --no-interaction --prefer-dist --no-scripts --classmap-authoritative
+      - name: Construir paquete privado sin entorno ni datos
+        run: node tools/refactor/hosting/private-api-package.mjs .refactor-data/private-api-release
+      - name: Subir solo a la cuenta privada conservando entorno y almacenamiento
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          username: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          password: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+          protocol: ftps
+          security: strict
+          port: ${{ secrets.REFACTOR_FTPS_PORT }}
+          local-dir: ./.refactor-data/private-api-release/
+          server-dir: ./
+          state-name: .ftp-refactor-private.json
+          dangerous-clean-slate: false
+          exclude: |
+            **/.env
+            **/.env.*
+            **/storage/**
+            **/bootstrap/cache/config.php
+            **/bootstrap/cache/routes*.php
+            **/bootstrap/cache/events.php
+            **/uploads/**
+            **/.git*

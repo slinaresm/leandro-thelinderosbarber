@@ -1,0 +1,36 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import cp from 'node:child_process';
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { buildPrivateApi } from './private-api-package.mjs';
+const require=createRequire(import.meta.url), mysql=require('mysql2/promise'), root=path.resolve(import.meta.dirname,'../../..');
+const credentials=JSON.parse(fs.readFileSync(path.join(root,'.refactor-data/runtime/mariadb.connection.json')));
+assert.equal(credentials.host,'127.0.0.1');assert.equal(credentials.port,33386);
+const fixture=JSON.parse(fs.readFileSync(path.join(root,'docs/refactor/evidencia/RF-017-paquete-pruebas-mariadb.json'))).privateFixture;
+assert(/^\.refactor-data[\\/]rf017_hosting_[a-f0-9]+$/.test(fixture));
+const work=path.join(root,'.refactor-data/rf017_private_install_'+crypto.randomBytes(5).toString('hex'));
+fs.mkdirSync(work);fs.mkdirSync(path.join(work,'public'));fs.mkdirSync(path.join(work,'data'));
+const release=path.join(work,'release'),manifest=buildPrivateApi(release,path.join(root,fixture,'release/private/api/vendor'));
+const database='rf017_install_'+crypto.randomBytes(5).toString('hex'),php=path.join(root,'.refactor-data/runtime/php84/php.exe');
+const db=await mysql.createConnection(credentials);let checks=0;
+try{
+  await db.query('CREATE DATABASE `'+database+'` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_520_nopad_ci');
+  const helper=path.join(release,'rf017-api-init.php');
+  let source=fs.readFileSync(helper,'utf8').replaceAll('/home/leakmcl/apps/linderosbarber-data',path.join(work,'data').replaceAll('\\','/')).replaceAll('/home/leakmcl/public_html/linderosbarber.cl',path.join(work,'public').replaceAll('\\','/')).replaceAll('leakmcl_linderos_usr',credentials.user).replaceAll('leakmcl_linderos',database);
+  fs.writeFileSync(helper,source);manifest.files['rf017-api-init.php']=crypto.createHash('sha256').update(source).digest('hex');
+  const manifestPath=path.join(release,'release-api.json'),save=()=>fs.writeFileSync(manifestPath,JSON.stringify(manifest));save();
+  let env=fs.readFileSync(path.join(root,'docs/refactor/hosting/production.env.example'),'utf8');
+  for(const [from,to]of [['APP_KEY=','APP_KEY=base64:'+crypto.randomBytes(32).toString('base64')],['JWT_KEYS={}',"JWT_KEYS='"+JSON.stringify({'key-1':crypto.randomBytes(48).toString('base64')})+"'"],['DB_HOST=localhost','DB_HOST=127.0.0.1'],['DB_PORT=3306','DB_PORT=33386'],['DB_DATABASE=leakmcl_linderos','DB_DATABASE='+database],['DB_USERNAME=leakmcl_linderos_usr','DB_USERNAME='+credentials.user],['DB_PASSWORD=',"DB_PASSWORD='"+credentials.password+"'"],['/home/leakmcl/apps/linderosbarber-data',path.join(work,'data').replaceAll('\\','/')],['/home/leakmcl/public_html/linderosbarber.cl',path.join(work,'public').replaceAll('\\','/')]])env=env.replaceAll(from,to);
+  const envFile=path.join(release,'api/.env');fs.writeFileSync(envFile,env,{mode:0o600});const envHash=crypto.createHash('sha256').update(env).digest('hex');
+  const run=()=>{const result=cp.spawnSync(php,[helper],{cwd:release,encoding:'utf8',windowsHide:true});assert(!result.stdout.includes(credentials.password),'No filtrar claves');assert(!result.stderr,result.stderr);return {exit:result.status,body:JSON.parse(result.stdout)};};
+  const file=Object.keys(manifest.files)[0],hash=manifest.files[file];manifest.files[file]='0'.repeat(64);save();assert.equal(run().body.code,'RELEASE_INVALID');manifest.files[file]=hash;save();checks++;
+  await db.query('CREATE TABLE `'+database+'`.read_only_sentinel (id INT PRIMARY KEY)');
+  assert.equal(run().body.code,'DATABASE_NOT_EMPTY');await db.query('DROP TABLE `'+database+'`.read_only_sentinel');checks++;
+  const installed=run();assert.equal(installed.exit,0,JSON.stringify(installed.body));assert.equal(installed.body.status,'passed');assert.equal(installed.body.tables,33);assert.equal(installed.body.maintenanceActive,true);assert(Object.values(installed.body.checks).every(x=>x===true));checks++;
+  assert.deepEqual(run().body,installed.body);checks++;
+  assert.equal(crypto.createHash('sha256').update(fs.readFileSync(envFile)).digest('hex'),envHash);assert.deepEqual(fs.readdirSync(path.join(work,'public')),[]);checks++;
+  fs.writeFileSync(path.join(root,'docs/refactor/evidencia/RF-017-api-instalacion-local.json'),JSON.stringify({date:'2026-10-30',status:'passed',scope:'Paquete de producción y MariaDB 10.6.28 locales; no prueba hosting',checks,files:Object.keys(manifest.files).length,tables:33,envPreserved:true,repeatDoesNotMigrate:true,occupiedDatabaseRejected:true,manifestTamperingRejected:true,maintenanceActive:true,publicFilesWritten:0},null,2)+'\n');
+  console.log(checks+' comprobaciones aprobadas: instalación privada, 33 tablas, .env preservado, mantenimiento e idempotencia.');
+}finally{await db.end();}
