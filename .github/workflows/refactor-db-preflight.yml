@@ -1,0 +1,48 @@
+name: Preparar comprobacion MariaDB sin modificar datos
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: refactor-hosting-production
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: phar, mbstring
+          tools: composer:v2
+          coverage: none
+      - name: Instalar las dependencias fijadas de la API sin ejecutar scripts
+        working-directory: api
+        run: composer install --no-dev --no-interaction --prefer-dist --no-scripts --no-autoloader
+      - name: Empaquetar solo diagnostico y lector dotenv existente
+        run: |
+          mkdir -p .refactor-data
+          php -d phar.readonly=0 tools/refactor/hosting/build-db-preflight.php
+      - name: Subir solo diagnostico a la cuenta privada
+        env:
+          FTP_SERVER: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          FTP_PORT: ${{ secrets.REFACTOR_FTPS_PORT }}
+          PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+        run: python3 tools/refactor/hosting/db-preflight-upload.py
+      - name: Conservar recibo sin claves
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: refactor-db-preflight-${{ github.run_id }}
+          path: db-preflight-upload-result.json
+          retention-days: 7
+          if-no-files-found: error
