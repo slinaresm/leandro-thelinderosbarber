@@ -202,7 +202,7 @@ test('analítica período local, snapshots y costo desconocido se muestran sin c
   await sql('INSERT INTO orders (id,client_id,buy_order,session_id,items,total,status,created_at) VALUES (?,?,?,?,?,?,?,?)', ['unknown-cost', fixture.actors.cliente.profile, 'SIN-COSTO-RF016', 'sintetica', JSON.stringify([{ productId: 'pomada', name: 'Pomada sin costo', quantity: 1, price: 10000 }]), 10000, 'paid', '2026-10-29 16:00:00']);
   await login(page); const filter = page.getByRole('form', { name: 'Filtrar indicadores' }); await filter.getByLabel('Mes del dashboard').fill('2026-10'); await filter.getByRole('button', { name: 'Ver mes', exact: true }).click(); await expect(page.getByText('Desconocido: datos incompletos', { exact: true })).toHaveCount(2);
   expect((await page.request.get('/api/analytics/overview?from=2026-01-01&to=2027-12-31')).status()).toBe(400);
-  await sql("UPDATE services SET price=29000,name='Nombre modificado' WHERE id='rf014-service'"); await tab(page, 'Agenda'); await expect(page.getByTestId('staff-visit').filter({ hasText: '2099-07-01' })).toContainText('Corte original');
+  await sql("UPDATE services SET price=29000,name='Nombre modificado' WHERE id='rf014-service'"); await tab(page, 'Agenda'); await page.getByLabel('Mes de agenda').fill('2099-07'); await expect(page.getByTestId('staff-visit').filter({ hasText: '2099-07-01' })).toContainText('Corte original');
 });
 
 test('RF020 dashboard mensual reconcilia ingresos, equipo, gráficos y matriz anual', async ({ page }) => {
@@ -268,6 +268,85 @@ test('RF020 mes sin actividad conserva doce meses, equipo y ceros explícitos', 
   await expect(page.getByRole('status').filter({ hasText: 'Este mes aún no tiene actividad' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Evolución mensual de ingresos' }).getByRole('button')).toHaveCount(12);
   await expect(page.getByRole('table', { name: 'Resultados por barbero · febrero de 2050' }).getByRole('row')).toHaveCount(4);
+});
+
+test('RF021 calendario mensual navega años, bisiestos, filtros y selección diaria por teclado', async ({ page }) => {
+  test.setTimeout(90000);
+  await sql("UPDATE reservations SET status='confirmed' WHERE id IN ('own-complete','own-cancel','own-reschedule')");
+  await sql("UPDATE reservations SET date='2099-07-02',start_time='09:00',end_time='09:45' WHERE id='own-reschedule'");
+  await login(page); await page.goto('/administracion?tab=agenda&agendaMonth=2099-07');
+  const calendar = page.getByRole('table', { name: /Calendario de julio de 2099/ });
+  await expect(calendar.getByRole('button')).toHaveCount(31);
+  await expect(page.getByTestId('staff-visit')).toHaveCount(5);
+  await page.getByRole('button', { name: 'Mes siguiente de agenda', exact: true }).click();
+  await expect(page.getByLabel('Mes de agenda')).toHaveValue('2099-08');
+  await expect(page.getByRole('heading', { name: 'No hay reservas para este mes' })).toBeVisible();
+  await page.getByRole('button', { name: 'Mes anterior de agenda', exact: true }).click();
+  await expect(page.getByTestId('staff-visit')).toHaveCount(5);
+  await page.getByLabel('Mes de agenda').fill('2026-12');
+  await page.getByRole('button', { name: 'Mes siguiente de agenda', exact: true }).click();
+  await expect(page.getByLabel('Mes de agenda')).toHaveValue('2027-01');
+  await page.getByRole('button', { name: 'Mes anterior de agenda', exact: true }).click();
+  await expect(page.getByLabel('Mes de agenda')).toHaveValue('2026-12');
+  await page.getByLabel('Mes de agenda').fill('2024-02');
+  await expect(page.locator('.calendar-day')).toHaveCount(29);
+  await page.getByRole('button', { name: /29 de febrero de 2024, 0 reservas/ }).click();
+  await expect(page.getByRole('heading', { name: 'No hay reservas para este día' })).toBeVisible();
+  await page.getByLabel('Mes de agenda').fill('2099-07');
+  const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-021'); fs.mkdirSync(directory, { recursive: true });
+  await page.screenshot({ path: path.join(directory, 'agenda-mes-1440.png'), fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: path.join(directory, 'agenda-mes-390.png'), fullPage: true });
+  await page.getByRole('combobox', { name: 'Barbero de agenda' }).selectOption(fixture.actors.barbero2.profile);
+  await expect(page.getByTestId('staff-visit')).toHaveCount(1);
+  await page.getByRole('searchbox', { name: 'Buscar en el mes' }).fill('sin-coincidencias');
+  await expect(page.getByRole('heading', { name: 'No hay reservas para este mes' })).toBeVisible();
+  await page.getByRole('button', { name: 'Limpiar filtros' }).click();
+  await page.getByRole('button', { name: /2 de julio de 2099, 2 reservas/ }).click();
+  await expect(page.getByTestId('staff-visit')).toHaveCount(2);
+  await page.reload(); await expect(page).toHaveURL(/agendaDate=2099-07-02/);
+  await expect(page.getByTestId('staff-visit')).toHaveCount(2);
+  const day = page.getByRole('button', { name: /2 de julio de 2099, 2 reservas/ });
+  await day.focus(); await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('button', { name: /3 de julio de 2099, 1 reservas/ })).toBeFocused();
+  await expect(page).toHaveURL(/agendaDate=2099-07-03/);
+  await page.getByRole('button', { name: 'Ver todo el mes' }).click();
+  await expect(page.getByTestId('staff-visit')).toHaveCount(5);
+  await page.getByRole('button', { name: 'Hoy', exact: true }).click();
+  await expect(page.locator('.calendar-day[aria-current="date"]')).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('RF021 acciones confirmadas de agenda conservan estados, precio y fidelización', async ({ page }) => {
+  await sql("UPDATE reservations SET status='confirmed' WHERE id IN ('own-complete','own-cancel','own-reschedule')");
+  await login(page); await page.goto('/administracion?tab=agenda&agendaMonth=2099-07&agendaDate=2099-07-01');
+  const before = (await sql('SELECT loyalty_points FROM clients WHERE id=?', [fixture.actors.cliente.profile]))[0].loyalty_points;
+  await confirm(page, page.getByTestId('staff-visit'), 'Completar visita');
+  await expect(page.getByTestId('staff-visit')).toContainText('Completada');
+  expect((await sql('SELECT loyalty_points FROM clients WHERE id=?', [fixture.actors.cliente.profile]))[0].loyalty_points).toBe(before + 10);
+  await page.getByRole('combobox', { name: 'Estado de agenda' }).selectOption('confirmed');
+  await expect(page.getByTestId('staff-visit')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Limpiar filtros' }).click();
+  await page.getByRole('button', { name: /3 de julio de 2099, 1 reservas/ }).click();
+  await confirm(page, page.getByTestId('staff-visit'), 'Cancelar visita');
+  await expect(page.getByTestId('staff-visit')).toContainText('Cancelada');
+  await page.getByRole('button', { name: /2 de julio de 2099, 2 reservas/ }).click();
+  const card = page.getByTestId('staff-visit').filter({ hasText: '2099-07-02 · 09:00' });
+  await card.getByRole('button', { name: 'Proponer otro horario' }).click();
+  const form = card.getByRole('form'); await form.getByLabel('Nueva hora').fill('13:00');
+  await form.getByRole('button', { name: 'Guardar nuevo horario' }).click();
+  await page.getByRole('dialog', { name: 'Confirmar nuevo horario' }).getByRole('button', { name: 'Confirmar nuevo horario definitivamente' }).click();
+  await expect(page.getByTestId('staff-visit').filter({ hasText: '2099-07-02 · 13:00' })).toContainText('$10.000');
+});
+
+test('RF021 error de lectura permite recuperar la agenda sin mostrar días vacíos falsos', async ({ page }) => {
+  await login(page);
+  await page.route('**/api/reservations', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }));
+  await page.goto('/administracion?tab=agenda&agendaMonth=2099-07');
+  await expect(page.getByRole('alert')).toContainText('El servicio no está disponible');
+  await expect(page.locator('.calendar-day')).toHaveCount(0);
+  await page.unroute('**/api/reservations'); await page.getByRole('button', { name: 'Reintentar consulta' }).click();
+  await expect(page.locator('.calendar-day')).toHaveCount(31);
 });
 
 test('eventos entre dos sesiones actualizan lecturas y conservan edición sin duplicar acciones', async ({ page, browser }) => {
@@ -352,6 +431,7 @@ test('revisión visual de todas las secciones, móvil/escritorio, teclado y enla
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
         await page.screenshot({ path: path.join(directory, role + '-' + key + '-' + width + '.png'), fullPage: true });
         if (key === 'agenda') {
+          if (role === 'admin') await page.getByLabel('Mes de agenda').fill('2099-07');
           const trigger = page.locator('.staff-section button:not(:disabled)').filter({ hasText: /^Cancelar visita$/ }).first(); await trigger.click(); await expect(page.getByRole('dialog', { name: 'Cancelar visita', exact: true })).toBeVisible();
           await page.screenshot({ path: path.join(directory, role + '-confirmacion-' + width + '.png'), fullPage: true }); await page.keyboard.press('Escape'); await expect(trigger).toBeFocused();
         }

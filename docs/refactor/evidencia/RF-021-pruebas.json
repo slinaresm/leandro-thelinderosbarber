@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-30",
+  "database": "rf016_test_6c9b330404",
+  "node": "v22.22.0",
+  "browser": "Microsoft Edge / Chromium real, Playwright 1.64.1",
+  "backend": "PHP 8.4 / MariaDB 10.6.28 real",
+  "status": "passed",
+  "stats": {
+    "startTime": "2026-10-30T20:30:58.034Z",
+    "duration": 31996.023,
+    "expected": 7,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "barbero completa propia visita una vez y acredita diez puntos",
+      "passed": true
+    },
+    {
+      "title": "reprogramación conflictiva preserva snapshot y cancelar exige confirmación",
+      "passed": true
+    },
+    {
+      "title": "analítica período local, snapshots y costo desconocido se muestran sin convertirlo a cero",
+      "passed": true
+    },
+    {
+      "title": "RF021 calendario mensual navega años, bisiestos, filtros y selección diaria por teclado",
+      "passed": true
+    },
+    {
+      "title": "RF021 acciones confirmadas de agenda conservan estados, precio y fidelización",
+      "passed": true
+    },
+    {
+      "title": "RF021 error de lectura permite recuperar la agenda sin mostrar días vacíos falsos",
+      "passed": true
+    },
+    {
+      "title": "admin finaliza en otra sesión y barbero recibe puntos/estado sin reenviar formulario abierto",
+      "passed": true
+    }
+  ],
+  "scope": "RF-021 agenda administrativa mensual",
+  "modelTests": {
+    "calendar": 4,
+    "dashboardDateRegression": 5,
+    "status": "passed"
+  },
+  "typecheck": "passed",
+  "build": "passed",
+  "published": false
+}

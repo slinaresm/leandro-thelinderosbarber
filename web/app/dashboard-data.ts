@@ -1,21 +1,9 @@
+import { monthRange, shiftMonth } from './civil-dates.mjs';
+export { monthRange, shiftMonth, monthTitle } from './civil-dates.mjs';
 export type DashboardVisit = { id: string; barber_id: string; barber_name: string; client_id: string; date: string; status: string; price: number | string; service_name: string };
 export type DashboardOrder = { id: string; status: string; total: number | string; created_at: string };
 export type DashboardBarber = { id: string; name: string; active: number | boolean };
 export const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-export function monthRange(month: string) {
-  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || Number(month.slice(0, 4)) < 1001 || Number(month.slice(0, 4)) > 9997) throw new Error('Selecciona un mes válido.');
-  const [year, number] = month.split('-').map(Number);
-  return { from: month + '-01', to: month + '-' + new Date(Date.UTC(year, number, 0)).getUTCDate() };
-}
-export function shiftMonth(month: string, delta: number) {
-  monthRange(month);
-  const [year, number] = month.split('-').map(Number), date = new Date(Date.UTC(year, number - 1 + delta, 1));
-  return date.toISOString().slice(0, 7);
-}
-export function monthTitle(month: string) {
-  monthRange(month);
-  return new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(month + '-01T12:00:00Z'));
-}
 function amount(value: number | string) {
   if (typeof value === 'string' && !/^\d+$/.test(value)) throw new Error('Hay importes que requieren revisión. No se muestran sumas incompletas.');
   const number = Number(value);
