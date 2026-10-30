@@ -1,0 +1,51 @@
+name: Publicar API de usuarios
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Escribe PUBLICAR_API_USUARIOS
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: refactor-hosting-production
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: inputs.confirmation == 'PUBLICAR_API_USUARIOS'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: pdo_mysql, mbstring, gd, fileinfo, curl, openssl
+          tools: composer:v2
+          coverage: none
+      - name: Generar autoload de produccion compatible
+        working-directory: api
+        run: |
+          composer install --no-dev --no-interaction --prefer-dist --no-scripts --classmap-authoritative
+          php -l app/Http/Controllers/AdminUserController.php
+          php -l routes/api.php
+          php -r '$loader = require "vendor/autoload.php"; if (!$loader->isClassMapAuthoritative() || !class_exists(App\Http\Controllers\AdminUserController::class)) { exit(1); }'
+      - name: Respaldar y actualizar solo cuatro archivos privados
+        env:
+          FTP_SERVER: ${{ secrets.REFACTOR_FTPS_SERVER }}
+          FTP_PORT: ${{ secrets.REFACTOR_FTPS_PORT }}
+          PRIVATE_USER: ${{ secrets.REFACTOR_FTPS_PRIVATE_USERNAME }}
+          PRIVATE_PASSWORD: ${{ secrets.REFACTOR_FTPS_PRIVATE_PASSWORD }}
+          PUBLIC_USER: ${{ secrets.REFACTOR_FTPS_PUBLIC_USERNAME }}
+          PUBLIC_PASSWORD: ${{ secrets.REFACTOR_FTPS_PUBLIC_PASSWORD }}
+        run: python3 tools/refactor/hosting/users-api-publish.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: refactor-users-api-${{ github.run_id }}
+          path: users-api-publish-result.json
+          retention-days: 7
+          if-no-files-found: error

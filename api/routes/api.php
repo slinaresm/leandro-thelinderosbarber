@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\AssistantController;
 use App\Http\Controllers\AuthController;
@@ -30,6 +31,15 @@ Route::post('/auth/register', [AuthController::class, 'register'])->name('auth.r
 Route::post('/auth/login', [AuthController::class, 'login'])->name('auth.login');
 Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 Route::get('/auth/me', [AuthController::class, 'me'])->middleware('jwt')->name('auth.me');
+
+Route::middleware(['jwt', 'role:admin'])->group(function (): void {
+    Route::get('/users', [AdminUserController::class, 'index']);
+    Route::post('/users', [AdminUserController::class, 'store']);
+    Route::patch('/users/{id}', [AdminUserController::class, 'update']);
+    Route::patch('/users/{id}/password', [AdminUserController::class, 'password']);
+    Route::patch('/users/{id}/status', [AdminUserController::class, 'status']);
+    Route::delete('/users/{id}', [AdminUserController::class, 'destroy']);
+});
 
 Route::get('/services', [ServiceController::class, 'index']);
 Route::get('/services/admin/all', [ServiceController::class, 'all'])->middleware(['jwt', 'role:admin']);

@@ -415,6 +415,70 @@ test('RF021 error de lectura permite recuperar la agenda sin mostrar días vací
   await expect(page.locator('.calendar-day')).toHaveCount(31);
 });
 
+test('RF023 usuarios: alta, edición, roles, contraseña y baja lógica conservan perfil e historial', async ({ page, browser }) => {
+  test.setTimeout(120000);
+  let id = ''; const password = 'Initial-RF023-1234', changed = 'Changed-RF023-1234';
+  const peer = await browser.newContext({ baseURL: fixture.url });
+  try {
+    await login(page); await tab(page, 'Usuarios'); await page.locator('summary').filter({ hasText: 'Crear usuario' }).click();
+    const form = page.getByRole('form', { name: 'Crear usuario', exact: true });
+    await form.getByLabel('Nombre completo', { exact: true }).fill('Usuario RF023'); await form.getByLabel('Correo electrónico', { exact: true }).fill('usuario-rf023@example.test');
+    await form.getByLabel('Teléfono (opcional)', { exact: true }).fill('+56 9 1234 5678'); await form.getByLabel('Contraseña inicial', { exact: true }).fill(password); await form.getByLabel('Repetir contraseña inicial', { exact: true }).fill(password);
+    await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+    const user = (await sql("SELECT id FROM users WHERE email='usuario-rf023@example.test'"))[0]; id = user.id;
+    const client = (await sql('SELECT id FROM clients WHERE user_id=?', [id]))[0];
+    await sql("INSERT INTO reservations (id,client_id,barber_id,service_id,date,start_time,end_time,status,service_name_snapshot,service_price_snapshot,service_duration_snapshot,starts_at,ends_at) VALUES ('rf023-history',?,?,?,'2026-10-01','09:00','09:45','completed','Corte histórico',10000,45,'2026-10-01 12:00:00','2026-10-01 12:45:00')", [client.id, fixture.actors.barbero.profile, 'rf014-service']);
+    expect((await api(peer, '/auth/login', { email: 'usuario-rf023@example.test', password })).status()).toBe(200);
+    const card = page.locator('.user-record').filter({ hasText: 'usuario-rf023@example.test' });
+    await card.getByRole('button', { name: 'Editar usuario', exact: true }).click();
+    const edit = card.getByRole('form'); await edit.getByLabel('Nombre completo', { exact: true }).fill('Usuario Editado RF023'); await edit.getByLabel('Rol de acceso', { exact: true }).selectOption('barbero'); await formSave(edit);
+    await expect(card.locator('.user-role')).toHaveText('Barbero'); await expect(edit).toHaveCount(0); expect((await peer.request.get('/api/auth/me')).status()).toBe(401);
+    expect((await sql('SELECT id FROM clients WHERE user_id=?', [id]))[0].id).toBe(client.id); expect((await sql('SELECT COUNT(*) n FROM barbers WHERE user_id=?', [id]))[0].n).toBe(1);
+    expect((await sql("SELECT COUNT(*) n FROM reservations WHERE id='rf023-history'"))[0].n).toBe(1);
+    await card.getByRole('button', { name: 'Cambiar contraseña', exact: true }).click();
+    const reset = card.getByRole('form'); await reset.getByLabel('Nueva contraseña', { exact: true }).fill(changed); await reset.getByLabel('Repetir nueva contraseña', { exact: true }).fill(changed); await formSave(reset); await expect(reset).toHaveCount(0);
+    expect((await api(peer, '/auth/login', { email: 'usuario-rf023@example.test', password })).status()).toBe(401);
+    expect((await api(peer, '/auth/login', { email: 'usuario-rf023@example.test', password: changed })).status()).toBe(200);
+    await confirm(page, card, 'Desactivar usuario'); await expect(card).toContainText('Inactivo'); expect((await peer.request.get('/api/auth/me')).status()).toBe(401);
+    expect((await sql("SELECT COUNT(*) n FROM reservations WHERE id='rf023-history'"))[0].n).toBe(1);
+    await confirm(page, card, 'Reactivar usuario'); await expect(card).toContainText('Activo'); expect((await peer.request.get('/api/auth/me')).status()).toBe(401);
+    await page.locator('.staff-create > summary').click();
+    await page.getByRole('searchbox', { name: 'Buscar usuarios' }).fill('RF023'); await expect(page.locator('.user-record')).toHaveCount(1);
+    const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-023'); fs.mkdirSync(directory, { recursive: true });
+    await expect(page.locator('.staff-section')).not.toContainText('Actualizando datos…');
+    await page.evaluate(() => { (document.activeElement as HTMLElement)?.blur(); window.scrollTo(0, 0); });
+    await page.screenshot({ path: path.join(directory, 'usuarios-1440.png'), fullPage: true }); await page.setViewportSize({ width: 390, height: 844 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true); await page.screenshot({ path: path.join(directory, 'usuarios-390.png'), fullPage: true });
+  } finally {
+    await peer.close(); await sql("DELETE FROM reservations WHERE id='rf023-history'");
+    if (id) { await sql('DELETE FROM jwt_sessions WHERE user_id=?', [id]); await sql('DELETE FROM barbers WHERE user_id=?', [id]); await sql('DELETE FROM clients WHERE user_id=?', [id]); await sql('DELETE FROM users WHERE id=?', [id]); }
+  }
+});
+
+test('RF023 permisos y autoprotección también se aplican por HTTP y CSRF', async ({ page }) => {
+  expect((await page.request.get('/api/users')).status()).toBe(401);
+  for (const role of ['cliente', 'barbero']) { await login(page, role); expect((await page.request.get('/api/users')).status()).toBe(403); expect((await api(page.context(), '/users/' + fixture.actors.admin.id + '/status', { active: false }, 'PATCH')).status()).toBe(403); }
+  await login(page); await tab(page, 'Usuarios');
+  const own = page.locator('.user-record').filter({ hasText: fixture.actors.admin.email });
+  await expect(own.getByRole('button', { name: 'Desactivar usuario', exact: true })).toHaveCount(0);
+  await own.getByRole('button', { name: 'Editar usuario', exact: true }).click(); await expect(own.getByRole('combobox', { name: 'Rol de acceso' })).toHaveCount(0);
+  expect((await api(page.context(), '/users/' + fixture.actors.admin.id, {}, 'DELETE')).status()).toBe(409);
+  expect((await api(page.context(), '/users/' + fixture.actors.admin.id, { role: 'cliente' }, 'PATCH')).status()).toBe(409);
+  expect((await page.request.patch('/api/users/' + fixture.actors.admin2.id + '/status', { data: { active: false } })).status()).toBe(403);
+  const data = await (await page.request.get('/api/users')).text(); expect(data).not.toMatch(/password_hash|jwt_sessions|jti|Synthetic-password/);
+});
+
+test('RF023 concurrencia real conserva al menos un administrador activo', async ({ browser }) => {
+  const one = await browser.newContext({ baseURL: fixture.url }), two = await browser.newContext({ baseURL: fixture.url });
+  try {
+    await login(await one.newPage(), 'admin'); await login(await two.newPage(), 'admin2');
+    const responses = await Promise.all([api(one, '/users/' + fixture.actors.admin2.id + '/status', { active: false }, 'PATCH'), api(two, '/users/' + fixture.actors.admin.id + '/status', { active: false }, 'PATCH')]);
+    const statuses = responses.map(response => response.status()); expect(statuses.filter(status => status === 200)).toHaveLength(1); expect(statuses.some(status => [401,403,409].includes(status))).toBe(true);
+    expect((await sql("SELECT COUNT(*) n FROM users WHERE role='admin' AND deleted_at IS NULL"))[0].n).toBe(1);
+  } finally { await one.close(); await two.close(); await sql("UPDATE users SET deleted_at=NULL,role='admin' WHERE id IN (?,?)", [fixture.actors.admin.id, fixture.actors.admin2.id]); }
+});
+
 test('eventos entre dos sesiones actualizan lecturas y conservan edición sin duplicar acciones', async ({ page, browser }) => {
   await login(page); await tab(page, 'Productos'); const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Pomada de la casa', exact: true }) }); await card.getByRole('button', { name: 'Editar Pomada de la casa' }).click(); const form = card.getByRole('form'); await form.getByLabel('Nombre del producto').fill('Borrador conservado');
   const context = await browser.newContext({ baseURL: fixture.url }); const peer = await context.newPage(); await login(peer, 'admin2'); expect((await api(context, '/products/pomada', { stock: 11 }, 'PATCH')).status()).toBe(200); await expect(card).toContainText('11 unidades', { timeout: 5000 }); await expect(form.getByLabel('Nombre del producto')).toHaveValue('Borrador conservado'); expect((await sql("SELECT name FROM products WHERE id='pomada'"))[0].name).toBe('Pomada de la casa'); await context.close();

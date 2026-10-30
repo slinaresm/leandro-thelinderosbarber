@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-30",
+  "scope": "RF-023 gestión administrativa de usuarios",
+  "status": "passed",
+  "browser": "Microsoft Edge / Chromium real, Playwright 1.64.1",
+  "backend": "PHP 8.4 / MariaDB 10.6.28 real",
+  "apiTests": 14,
+  "apiAssertions": 122,
+  "browserScenarios": 3,
+  "cases": [
+    {
+      "title": "RF023 usuarios: alta, edición, roles, contraseña y baja lógica conservan perfil e historial",
+      "passed": true
+    },
+    {
+      "title": "RF023 permisos y autoprotección también se aplican por HTTP y CSRF",
+      "passed": true
+    },
+    {
+      "title": "RF023 concurrencia real conserva al menos un administrador activo",
+      "passed": true
+    }
+  ],
+  "privatePublisherTests": 7,
+  "apiContractOperations": 73,
+  "formatter": "passed",
+  "typecheck": "passed",
+  "build": "passed",
+  "apiPublished": false,
+  "webPublished": false,
+  "productionAccountsCreated": 0
+}

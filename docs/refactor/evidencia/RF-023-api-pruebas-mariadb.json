@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-30",
+  "engine": "MariaDB 10.6.28 real",
+  "php": "8.4.27",
+  "database": "rf023_test_cd57dc628d",
+  "tests": 14,
+  "assertions": 122,
+  "status": "passed",
+  "junitPrivate": true
+}
