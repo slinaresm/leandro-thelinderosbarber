@@ -45,7 +45,7 @@ jobs:
                   port = os.environ.get('FTP_PORT', '')
                   user = os.environ.get(role + '_USER', '')
                   password = os.environ.get(role + '_PASSWORD', '')
-                  if host != 'ftp.lea0km.cl' or port != '21' or user != expected_user or not password:
+                  if host != 'solu36.tuwebdns.net' or port != '21' or user != expected_user or not password:
                       raise ValueError('CONFIGURATION_INVALID')
                   context = ssl.create_default_context()
                   context.minimum_version = ssl.TLSVersion.TLSv1_2
