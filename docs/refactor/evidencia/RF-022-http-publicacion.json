@@ -1,0 +1,33 @@
+{
+  "scope": "RF-022-purchases-publication",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/ingresar",
+      "status": 200
+    },
+    {
+      "path": "/administracion?tab=compras",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    }
+  ],
+  "purchasesCode": [
+    "/assets/staff-panel-CePnkcqm.js"
+  ],
+  "purchasesStyles": [
+    "/assets/staff-panel-QUoAhiuJ.css"
+  ],
+  "status": "passed",
+  "authenticatedRemoteSmoke": false
+}

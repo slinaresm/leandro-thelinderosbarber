@@ -46,5 +46,6 @@
     "capturas/RF-022/compras-1440.png",
     "capturas/RF-022/compras-390.png"
   ],
-  "published": false
+  "published": true,
+  "publicationRun": "https://github.com/slinaresm/leandro-thelinderosbarber/actions/runs/41127100861"
 }
