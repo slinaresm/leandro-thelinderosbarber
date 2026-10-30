@@ -1,0 +1,38 @@
+{
+  "scope": "RF-023-users-publication",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/ingresar",
+      "status": 200
+    },
+    {
+      "path": "/administracion?tab=usuarios",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    },
+    {
+      "path": "/api/users",
+      "status": 401
+    }
+  ],
+  "usersCode": [
+    "/assets/staff-panel-DrUD35yx.js"
+  ],
+  "usersStyles": [
+    "/assets/staff-panel-DlA1Pkin.css"
+  ],
+  "status": "passed",
+  "authenticatedRemoteSmoke": false,
+  "productionAccountsCreated": 0
+}

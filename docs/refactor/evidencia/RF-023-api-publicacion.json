@@ -1,0 +1,18 @@
+{
+  "status": "published-users-api",
+  "filesPublished": [
+    "app/Http/Controllers/AdminUserController.php",
+    "vendor/composer/autoload_classmap.php",
+    "vendor/composer/autoload_static.php",
+    "routes/api.php"
+  ],
+  "backupPrivateFile": "rf023-api-before-41130881910.tar",
+  "backupSha256": "db41c46e0b3b1f403c7c532fc042eecf19af20ae840ddf3b2c24aa0734d3cb5a",
+  "backupReadBackVerified": true,
+  "healthStatus": 200,
+  "unauthenticatedUsersStatus": 401,
+  "databaseWrites": 0,
+  "migrationsRun": false,
+  "envModified": false,
+  "accountsCreated": 0
+}

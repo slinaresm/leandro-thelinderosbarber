@@ -26,7 +26,9 @@
   "formatter": "passed",
   "typecheck": "passed",
   "build": "passed",
-  "apiPublished": false,
-  "webPublished": false,
-  "productionAccountsCreated": 0
+  "apiPublished": true,
+  "webPublished": true,
+  "productionAccountsCreated": 0,
+  "apiRun": "https://github.com/slinaresm/leandro-thelinderosbarber/actions/runs/41130881910",
+  "webRun": "https://github.com/slinaresm/leandro-thelinderosbarber/actions/runs/41131207732"
 }
