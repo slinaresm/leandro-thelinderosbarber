@@ -162,7 +162,7 @@ test('respuesta de compra perdida permite mismo reintento sin duplicar stock ni 
 });
 
 test('extracción simulada real, revisión editable obligatoria, factura privada y confirmación', async ({ page, browser }) => {
-  await login(page); await tab(page, 'Compras'); const form = page.getByRole('form', { name: 'Extraer factura' }); await form.getByLabel('Factura (PDF', { exact: false }).setInputFiles({ name: 'factura.pdf', mimeType: 'application/pdf', buffer: pdf }); await form.getByRole('button', { name: 'Extraer propuesta' }).click(); await expect(page.getByRole('status').filter({ hasText: 'Propuesta SIMULADA' })).toBeVisible();
+  await login(page); await tab(page, 'Compras'); await page.locator('.purchase-invoice > summary').click(); const form = page.getByRole('form', { name: 'Extraer factura' }); await form.getByLabel('Factura (PDF', { exact: false }).setInputFiles({ name: 'factura.pdf', mimeType: 'application/pdf', buffer: pdf }); await form.getByRole('button', { name: 'Extraer propuesta' }).click(); await expect(page.getByRole('status').filter({ hasText: 'Propuesta SIMULADA' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirmar compra', exact: true })).toBeDisabled(); expect((await sql("SELECT stock FROM products WHERE id='pomada'"))[0].stock).toBe(5);
   const url = await page.getByRole('link', { name: 'Descargar factura privada' }).first().getAttribute('href'); const response = await page.request.get(url!); expect(response.status()).toBe(200); expect(response.headers()['content-disposition']).toContain('attachment'); expect(response.headers()['cache-control']).toContain('no-store');
   const context = await browser.newContext({ baseURL: fixture.url }); expect((await context.request.get(url!)).status()).toBe(401); const peer = await context.newPage(); await login(peer, 'admin2'); expect((await context.request.get(url!)).status()).toBe(404);
@@ -173,10 +173,76 @@ test('extracción simulada real, revisión editable obligatoria, factura privada
 
 test('errores de archivo/proveedor conservan formulario y nunca simulan éxito', async ({ page }) => {
   await login(page); await tab(page, 'Compras'); await page.getByRole('textbox', { name: 'Proveedor', exact: true }).fill('Conservar ante error'); await page.getByRole('button', { name: 'Agregar línea' }).click(); await page.getByLabel('Nombre nuevo').fill('Línea conservada');
-  const form = page.getByRole('form', { name: 'Extraer factura' }); await form.getByLabel('Factura (PDF', { exact: false }).setInputFiles({ name: 'falsa.pdf', mimeType: 'application/pdf', buffer: Buffer.from('no es pdf') }); await form.getByRole('button', { name: 'Extraer propuesta' }).click(); await expect(page.getByRole('alert')).toBeVisible(); await expect(page.getByLabel('Nombre nuevo')).toHaveValue('Línea conservada');
+  await page.locator('.purchase-invoice > summary').click(); const form = page.getByRole('form', { name: 'Extraer factura' }); await form.getByLabel('Factura (PDF', { exact: false }).setInputFiles({ name: 'falsa.pdf', mimeType: 'application/pdf', buffer: Buffer.from('no es pdf') }); await form.getByRole('button', { name: 'Extraer propuesta' }).click(); await expect(page.getByRole('alert')).toBeVisible(); await expect(page.getByLabel('Nombre nuevo')).toHaveValue('Línea conservada');
   // Route this request to the isolated real PHP process configured AI_MODE=disabled.
   await page.route('**/api/purchases/extract', async route => { const response = await route.fetch({ url: fixture.disabledApiUrl + '/api/purchases/extract' }); expect(response.status()).toBe(503); await route.fulfill({ response }); }); await form.getByLabel('Factura (PDF', { exact: false }).setInputFiles({ name: 'factura.pdf', mimeType: 'application/pdf', buffer: pdf }); await form.getByRole('button', { name: 'Extraer propuesta' }).click(); await expect(page.getByRole('alert')).toContainText('no está disponible'); await expect(page.getByRole('textbox', { name: 'Proveedor', exact: true })).toHaveValue('Conservar ante error');
   await form.getByLabel('Factura (PDF', { exact: false }).setInputFiles({ name: 'grande.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(8388609) }); await form.getByRole('button', { name: 'Extraer propuesta' }).click(); await expect(page.getByRole('alert')).toContainText('8 MiB');
+});
+
+test('RF022 compras muestra totales seguros y mantiene el borrador al consultar historial', async ({ page }) => {
+  test.setTimeout(90000);
+  const ids: string[] = [], values: unknown[] = [];
+  for (let index = 0; index < 13; index++) {
+    const id = 'rf022-purchase-' + index; ids.push(id);
+    values.push(id, 'Proveedor sintético Muñoz ' + index, 'RF022-' + index, JSON.stringify([{ productId: 'pomada', name: 'Pomada de ensayo', quantity: 2, unitCost: 2500 + index * 100, action: 'existing' }]), (2500 + index * 100) * 2, '2041-' + (index < 11 ? '10' : '11') + '-' + String(index + 1).padStart(2, '0') + ' 15:00:00');
+  }
+  try {
+    await sql('INSERT INTO purchases (id,supplier,invoice_number,items,total_cost,created_at) VALUES ' + ids.map(() => '(?,?,?,?,?,?)').join(','), values);
+    await login(page); await tab(page, 'Compras');
+    await expect(page.getByRole('form', { name: 'Extraer factura' })).toBeHidden();
+    await page.getByRole('textbox', { name: 'Proveedor', exact: true }).fill('Borrador mantenido');
+    await page.getByRole('textbox', { name: 'Número de factura', exact: true }).fill('BORRADOR-001');
+    await page.getByRole('button', { name: 'Agregar línea' }).click();
+    const first = page.getByRole('region', { name: 'Línea 1', exact: true });
+    await first.getByLabel('Nombre nuevo').fill('Aceite para barba'); await first.getByLabel('Categoría nueva').fill('Cuidado de barba');
+    await first.getByLabel('Cantidad', { exact: true }).fill('2'); await first.getByLabel('Costo unitario (CLP)', { exact: true }).fill('3500');
+    await page.getByRole('button', { name: 'Agregar línea' }).click();
+    const second = page.getByRole('region', { name: 'Línea 2', exact: true });
+    await second.getByRole('combobox', { name: 'Producto', exact: true }).selectOption('pomada');
+    await second.getByLabel('Cantidad', { exact: true }).fill('3'); await second.getByLabel('Costo unitario (CLP)', { exact: true }).fill('1000');
+    await expect(page.getByTestId('purchase-total')).toHaveText('$10.000');
+    await second.getByLabel('Costo unitario (CLP)', { exact: true }).fill('');
+    await expect(page.getByTestId('purchase-total')).toHaveText('Por revisar');
+    await expect(page.getByRole('button', { name: 'Confirmar compra', exact: true })).toBeDisabled();
+    await second.getByLabel('Costo unitario (CLP)', { exact: true }).fill('1000');
+    const history = page.getByRole('region', { name: 'Historial de compras', exact: true });
+    await history.getByRole('searchbox', { name: 'Buscar compras' }).fill('sintetico munoz');
+    await history.getByLabel('Mes de compra').fill('2041-10');
+    await expect(history.getByRole('status')).toContainText('11 de');
+    await history.getByRole('button', { name: 'Página siguiente', exact: true }).click();
+    await expect(history.getByRole('navigation')).toContainText('Página 2 de 2');
+    await history.locator('.purchase-history-record > summary').first().click();
+    await expect(history.getByRole('table', { name: 'Productos registrados en esta compra' })).toContainText('$5.000');
+    await history.getByRole('searchbox', { name: 'Buscar compras' }).fill('sin-coincidencias-rf022');
+    await expect(history.getByRole('heading', { name: 'No encontramos compras con estos filtros' })).toBeVisible();
+    await history.getByRole('button', { name: 'Ver todas las compras' }).click();
+    await expect(page.getByRole('textbox', { name: 'Proveedor', exact: true })).toHaveValue('Borrador mantenido');
+    await page.getByRole('button', { name: 'Actualizar panel' }).click();
+    await expect(page.getByTestId('purchase-total')).toHaveText('$10.000');
+    await expect(page.locator('.staff-section')).not.toContainText('Actualizando datos…');
+    const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-022'); fs.mkdirSync(directory, { recursive: true });
+    await page.screenshot({ path: path.join(directory, 'compras-1440.png'), fullPage: true });
+    await page.setViewportSize({ width: 390, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: path.join(directory, 'compras-390.png'), fullPage: true });
+    await second.getByRole('button', { name: 'Quitar línea 2' }).click();
+    await expect(page.getByTestId('purchase-total')).toHaveText('$7.000');
+    expect((await sql("SELECT COUNT(*) n FROM purchases WHERE supplier='Borrador mantenido'"))[0].n).toBe(0);
+  } finally { await sql('DELETE FROM purchases WHERE id IN (' + ids.map(() => '?').join(',') + ')', ids); }
+});
+
+test('RF022 error del historial no borra la compra en preparación ni se presenta como historial vacío', async ({ page }) => {
+  await login(page); await tab(page, 'Compras');
+  await page.getByRole('textbox', { name: 'Proveedor', exact: true }).fill('Borrador ante error de historial');
+  await page.route('**/api/purchases', route => route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }));
+  await page.getByRole('button', { name: 'Consultar historial de compras' }).click();
+  await expect(page.getByRole('alert')).toContainText('El servicio no está disponible');
+  await expect(page.getByRole('heading', { name: 'Tu historial de compras comienza aquí' })).toHaveCount(0);
+  await expect(page.getByRole('textbox', { name: 'Proveedor', exact: true })).toHaveValue('Borrador ante error de historial');
+  await page.unroute('**/api/purchases');
+  await page.getByRole('button', { name: 'Reintentar consulta' }).click();
+  await expect(page.getByRole('region', { name: 'Historial de compras', exact: true })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: 'Proveedor', exact: true })).toHaveValue('Borrador ante error de historial');
 });
 
 test('admin lee historial/fotos pero no crea documentos de barbero ni modifica puntos', async ({ page }) => {

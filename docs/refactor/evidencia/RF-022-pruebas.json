@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-30",
+  "scope": "RF-022 interfaz de compras",
+  "status": "passed",
+  "browser": "Microsoft Edge / Chromium real, Playwright 1.64.1",
+  "backend": "PHP 8.4 / MariaDB 10.6.28 real",
+  "integrationScenarios": 8,
+  "cases": [
+    {
+      "title": "mutaciones administrativas rechazan otros roles aunque invoquen la API directamente",
+      "passed": true
+    },
+    {
+      "title": "compra manual mezcla existente y nuevo; stock, costo e historial atómicos",
+      "passed": true
+    },
+    {
+      "title": "respuesta de compra perdida permite mismo reintento sin duplicar stock ni escritura por eventos",
+      "passed": true
+    },
+    {
+      "title": "extracción simulada real, revisión editable obligatoria, factura privada y confirmación",
+      "passed": true
+    },
+    {
+      "title": "errores de archivo/proveedor conservan formulario y nunca simulan éxito",
+      "passed": true
+    },
+    {
+      "title": "RF022 compras muestra totales seguros y mantiene el borrador al consultar historial",
+      "passed": true
+    },
+    {
+      "title": "eventos entre dos sesiones actualizan lecturas y conservan edición sin duplicar acciones",
+      "passed": true
+    },
+    {
+      "title": "RF022 error del historial no borra la compra en preparación ni se presenta como historial vacío",
+      "passed": true
+    }
+  ],
+  "modelTests": 5,
+  "typecheck": "passed",
+  "build": "passed",
+  "screenshots": [
+    "capturas/RF-022/compras-1440.png",
+    "capturas/RF-022/compras-390.png"
+  ],
+  "published": false
+}
