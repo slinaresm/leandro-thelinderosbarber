@@ -1,5 +1,7 @@
 # RF-023 · Administración de usuarios
 
+Corrección de navegación: el acceso se denomina Cuentas, aparece junto a Resumen y Agenda y también en el menú principal de administradores. Acepta `tab=cuentas` y conserva `tab=usuarios`. La gestión incluye todas las cuentas de administrador, barbero y cliente.
+
 Módulo Usuarios para alta de administradores/barberos/clientes, edición de nombre/correo/teléfono/rol, nueva contraseña, baja lógica y reactivación. Búsqueda/filtros y confirmaciones. Sin borrado físico; mantiene perfiles, reservas e historial. Un cambio de rol crea el perfil faltante y retira al antiguo barbero del catálogo; volver al rol conserva su perfil previo.
 
 JWT/admin y CSRF en servidor; correo único, contraseña bcrypt de 12 caracteres mínimo/72 bytes máximo. Baja/cambio de contraseña/correo/rol revocan sesiones. Prohíbe auto-baja/cambio de rol propio, revalida actor bajo bloqueo y mantiene un admin activo ante concurrencia. Auditoría sin secretos. No envía credenciales ni modifica usuarios reales durante pruebas/despliegue.

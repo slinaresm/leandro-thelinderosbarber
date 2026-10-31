@@ -5,6 +5,7 @@ JWT verifica users.deleted_at y lee rol vigente. Las tablas clients/barbers rela
 **Goals:** administrar cuentas de todos los roles, conservar historial y evitar bloqueo administrativo o sesiones obsoletas.
 **Non-Goals:** borrado físico, lectura de contraseñas, envío de credenciales, recuperación por correo o modificación de fidelización.
 ## Decisions
+- La sección se presenta como Cuentas en el primer grupo del panel y en el menú principal para administradores; `tab=cuentas` y el enlace previo `tab=usuarios` abren el mismo módulo de gestión de todos los roles.
 - Controlador dedicado y endpoints /users protegidos por JWT/admin y CSRF existente; proyección explícita sin hashes/tokens. Validación estricta y correo normalizado.
 - Baja lógica usa deleted_at; DELETE y cambio de estado desactivan sin eliminar. Revocar sesiones ante baja, contraseña, correo o rol. Reactivar no restaura sesiones previas.
 - Transacciones bloquean usuarios en orden estable y revalidan al actor desde DB para serializar cambios administrativos concurrentes. No se permite auto-baja ni cambio del propio rol; conservar al menos un admin activo.

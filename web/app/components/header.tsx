@@ -36,6 +36,7 @@ export function Header() {
       <nav id="main-nav" className={open ? 'open' : ''} aria-label="Navegación principal" onClick={() => setOpen(false)}>
         {staffView ? <Link to="/">Volver al sitio ↗</Link> : <><Link to="/#ritual">El ritual</Link><Link to="/#servicios">Servicios</Link><Link to="/#barberos">Barberos</Link><Link to="/tienda">La tienda</Link><Link to="/carrito">Carrito</Link></>}
         <Link className="nav-account" to={session.user ? roleHome(session.user.role) : '/ingresar'}>Mi cuenta</Link>
+        {session.user?.role === 'admin' && <Link to="/administracion?tab=cuentas" aria-current={staffView && ['cuentas', 'usuarios'].includes(new URLSearchParams(location.search).get('tab') || '') ? 'page' : undefined}>Cuentas</Link>}
         {!staffView && <Link className="nav-book" to="/reservar">Reservar hora <span>↗</span></Link>}
         {session.user && <button className="session-close" type="button" disabled={pending} onClick={logout}>{pending ? 'Cerrando…' : 'Cerrar sesión'}</button>}
       </nav>

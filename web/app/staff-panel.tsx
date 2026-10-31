@@ -8,7 +8,7 @@ import { StaffClients, StaffNotes } from './staff-clients';
 import { BarberStats, Schedule, StaffBarbers, StaffMaterials, StaffProducts, StaffServices, type Barber } from './staff-catalogs';
 import { StaffOverview, StaffPromotions } from './staff-business';
 import { StaffMovements, StaffOrders, StaffPurchases } from './staff-commerce';
-const adminTabs = [['resumen', 'Resumen'], ['agenda', 'Agenda'], ['barberos', 'Barberos'], ['clientes', 'Clientes'], ['servicios', 'Servicios'], ['inventario', 'Materiales'], ['productos', 'Productos'], ['compras', 'Compras'], ['movimientos', 'Movimientos'], ['pedidos', 'Pedidos'], ['promociones', 'Promociones'], ['usuarios', 'Usuarios']];
+const adminTabs = [['resumen', 'Resumen'], ['agenda', 'Agenda'], ['barberos', 'Barberos'], ['clientes', 'Clientes'], ['servicios', 'Servicios'], ['inventario', 'Materiales'], ['productos', 'Productos'], ['compras', 'Compras'], ['movimientos', 'Movimientos'], ['pedidos', 'Pedidos'], ['promociones', 'Promociones'], ['usuarios', 'Cuentas']];
 const barberTabs = [['agenda', 'Agenda'], ['clientes', 'Clientes'], ['fotos', 'Fotos'], ['notas', 'Notas privadas'], ['materiales', 'Materiales'], ['stats', 'Estadísticas'], ['horario', 'Horario']];
 const sectionInfo: Record<string, string> = {
   usuarios: 'Administra cuentas, roles y acceso a la plataforma.',
@@ -29,8 +29,8 @@ const sectionInfo: Record<string, string> = {
   stats: 'Consulta tus atenciones y la actividad de tus clientes.',
   horario: 'Define tu disponibilidad para recibir reservas.'
 };
-const adminGroups = [['Tu negocio', ['resumen', 'agenda', 'clientes', 'barberos']], ['Catálogos', ['servicios', 'productos', 'inventario']], ['Comercio', ['pedidos', 'compras', 'movimientos', 'promociones']], ['Administración', ['usuarios']]] as const;
-const legacyTabs: Record<string, string> = { tienda: 'productos', 'stock-costos': 'compras', marketing: 'promociones' };
+const adminGroups = [['Tu negocio', ['resumen', 'agenda', 'usuarios', 'clientes', 'barberos']], ['Catálogos', ['servicios', 'productos', 'inventario']], ['Comercio', ['pedidos', 'compras', 'movimientos', 'promociones']]] as const;
+const legacyTabs: Record<string, string> = { cuentas: 'usuarios', tienda: 'productos', 'stock-costos': 'compras', marketing: 'promociones' };
 function BarberSection({ tab, revision }: { tab: string; revision: number }) {
   const profile = useResource<{ barber: Barber }>('/barbers/me/profile', revision), barber = profile.data?.barber;
   return <><ResourceState resource={profile} />{barber && <>{!Number(barber.active) && <p role="status">Tu perfil está inactivo en el catálogo. Consulta al administrador antes de atender nuevas reservas.</p>}{tab === 'agenda' ? <StaffAgenda revision={revision} /> : tab === 'clientes' || tab === 'fotos' ? <StaffClients barberId={barber.id} revision={revision} photosOnly={tab === 'fotos'} /> : tab === 'notas' ? <StaffNotes barberId={barber.id} revision={revision} /> : tab === 'materiales' ? <StaffMaterials admin={false} revision={revision} /> : tab === 'stats' ? <BarberStats id={barber.id} revision={revision} /> : <Schedule barber={barber} saved={profile.reload} />}</>}</>;

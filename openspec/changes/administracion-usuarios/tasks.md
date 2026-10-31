@@ -6,3 +6,5 @@
 ## 3. Entrega
 - [x] 3.1 Implementar y probar actualización privada limitada con respaldo/rollback y autoload compatible; aprobar formatter/tipos/build/OpenSpec.
 - [x] 3.2 Publicar API y front, verificar rutas protegidas/archivos/health y registrar evidencia sin crear cuentas de prueba remotas.
+## 4. Acceso visible a cuentas
+- [ ] 4.1 Mostrar Cuentas en el menú principal para admin y junto a Resumen/Agenda en el panel, conservar enlaces anteriores, validar y publicar el front.

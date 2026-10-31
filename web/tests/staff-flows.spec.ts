@@ -420,7 +420,7 @@ test('RF023 usuarios: alta, edición, roles, contraseña y baja lógica conserva
   let id = ''; const password = 'Initial-RF023-1234', changed = 'Changed-RF023-1234';
   const peer = await browser.newContext({ baseURL: fixture.url });
   try {
-    await login(page); await tab(page, 'Usuarios'); await page.locator('summary').filter({ hasText: 'Crear usuario' }).click();
+    await login(page); await tab(page, 'Cuentas'); await page.locator('summary').filter({ hasText: 'Crear usuario' }).click();
     const form = page.getByRole('form', { name: 'Crear usuario', exact: true });
     await form.getByLabel('Nombre completo', { exact: true }).fill('Usuario RF023'); await form.getByLabel('Correo electrónico', { exact: true }).fill('usuario-rf023@example.test');
     await form.getByLabel('Teléfono (opcional)', { exact: true }).fill('+56 9 1234 5678'); await form.getByLabel('Contraseña inicial', { exact: true }).fill(password); await form.getByLabel('Repetir contraseña inicial', { exact: true }).fill(password);
@@ -459,7 +459,7 @@ test('RF023 usuarios: alta, edición, roles, contraseña y baja lógica conserva
 test('RF023 permisos y autoprotección también se aplican por HTTP y CSRF', async ({ page }) => {
   expect((await page.request.get('/api/users')).status()).toBe(401);
   for (const role of ['cliente', 'barbero']) { await login(page, role); expect((await page.request.get('/api/users')).status()).toBe(403); expect((await api(page.context(), '/users/' + fixture.actors.admin.id + '/status', { active: false }, 'PATCH')).status()).toBe(403); }
-  await login(page); await tab(page, 'Usuarios');
+  await login(page); await tab(page, 'Cuentas');
   const own = page.locator('.user-record').filter({ hasText: fixture.actors.admin.email });
   await expect(own.getByRole('button', { name: 'Desactivar usuario', exact: true })).toHaveCount(0);
   await own.getByRole('button', { name: 'Editar usuario', exact: true }).click(); await expect(own.getByRole('combobox', { name: 'Rol de acceso' })).toHaveCount(0);
