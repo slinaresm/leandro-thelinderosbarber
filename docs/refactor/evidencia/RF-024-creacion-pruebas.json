@@ -29,5 +29,6 @@
   "typecheck": "passed",
   "build": "passed",
   "productionDataModified": false,
-  "published": false
+  "published": true,
+  "publicationRun": "https://github.com/slinaresm/leandro-thelinderosbarber/actions/runs/41260036244"
 }

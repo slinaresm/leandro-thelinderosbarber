@@ -14,4 +14,4 @@
 - [x] 4.1 Unificar ediciones en modales Guardar/Cancelar, conservar borrador ante errores y bloquear cierre durante envío; retirar actualizaciones automáticas del panel y al recuperar foco.
 - [x] 4.2 Verificar en navegador guardar, cancelar/Escape, foco, errores, móvil y ausencia de consultas automáticas; compilar y publicar con evidencia.
 ## 5. Creación coherente
-- [ ] 5.1 Convertir Crear en modal con Guardar/Cancelar, verificar descarte/error/alta y publicar sin restablecer consultas automáticas.
+- [x] 5.1 Convertir Crear en modal con Guardar/Cancelar, verificar descarte/error/alta y publicar sin restablecer consultas automáticas.
