@@ -39,21 +39,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, []);
   useEffect(() => {
-    const sync = () => { if (document.visibilityState === 'visible') void refresh(); };
     if ('BroadcastChannel' in window) {
       channel.current = new BroadcastChannel('linderos-session');
       channel.current.onmessage = () => void refresh();
     }
     window.addEventListener('session-invalid', invalidate);
-    window.addEventListener('focus', sync);
-    document.addEventListener('visibilitychange', sync);
     void refresh();
     return () => {
       generation.current++;
       channel.current?.close();
       window.removeEventListener('session-invalid', invalidate);
-      window.removeEventListener('focus', sync);
-      document.removeEventListener('visibilitychange', sync);
     };
   }, [refresh, invalidate]);
 

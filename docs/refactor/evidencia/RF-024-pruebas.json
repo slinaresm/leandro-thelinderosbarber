@@ -1,0 +1,67 @@
+{
+  "date": "2026-10-31",
+  "scope": "RF-024 edición modal y actualización manual",
+  "status": "passed",
+  "browser": "Microsoft Edge / Chromium real, Playwright 1.64.1",
+  "backend": "PHP 8.4 / MariaDB 10.6.28 real",
+  "regressionCases": [
+    {
+      "title": "RF024 edición modal: cancelar y Escape descartan cambios en todos los catálogos y cuentas",
+      "passed": true
+    },
+    {
+      "title": "RF024 error conserva borrador, guardar cierra modal y no hay actualización automática",
+      "passed": true
+    },
+    {
+      "title": "reprogramación conflictiva preserva snapshot y cancelar exige confirmación",
+      "passed": true
+    },
+    {
+      "title": "horario propio validado y materiales: solicitud, competencia y resolución sin sumar cantidad",
+      "passed": true
+    },
+    {
+      "title": "administración de servicios y barberos conserva bajas y no expone credenciales",
+      "passed": true
+    },
+    {
+      "title": "RF023 usuarios: alta, edición, roles, contraseña y baja lógica conservan perfil e historial",
+      "passed": true
+    },
+    {
+      "title": "RF023 permisos y autoprotección también se aplican por HTTP y CSRF",
+      "passed": true
+    },
+    {
+      "title": "RF023 concurrencia real conserva al menos un administrador activo",
+      "passed": true
+    }
+  ],
+  "finalCases": [
+    {
+      "title": "RF024 edición modal: cancelar y Escape descartan cambios en todos los catálogos y cuentas",
+      "passed": true
+    },
+    {
+      "title": "RF024 error conserva borrador, guardar cierra modal y no hay actualización automática",
+      "passed": true
+    }
+  ],
+  "typecheck": "passed",
+  "build": "passed",
+  "idleWithoutAutomaticRequestsSeconds": 35,
+  "checks": [
+    "Cancelar y Escape sin escritura en seis módulos",
+    "Retorno del foco y descarte de borrador",
+    "Error conserva borrador",
+    "Bloqueo de cierre durante envío",
+    "Guardar persiste en base real y cierra modal",
+    "Móvil 390px sin desbordamiento",
+    "Sin consultas al recuperar foco o visibilidad",
+    "Actualización manual disponible"
+  ],
+  "authenticatedRemoteSmoke": false,
+  "productionDataModified": false,
+  "published": false
+}

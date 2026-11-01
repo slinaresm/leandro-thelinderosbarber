@@ -9,7 +9,8 @@ RF-016 ya centraliza mutaciones y confirmaciones en staff.tsx y separa catálogo
 
 ## Decisions
 - Reutilizar una colección tipada con búsqueda normalizada, estado, orden español y páginas de diez registros. El servidor sigue siendo autoridad de todos los cambios.
-- Creación desplegable con details nativo y edición contextual; evita gestionar una segunda capa de diálogos y conserva borradores. Confirmaciones sensibles permanecen en dialog.
+- Creación desplegable con details nativo y edición mediante dialog modal compartido, con Guardar y Cancelar. Cancelar/Escape descartan el borrador y devuelven el foco; los errores conservan valores y mantienen abierto el modal. Durante el envío se bloquean cierre y doble envío. Confirmaciones sensibles permanecen en dialog.
+- RF-024 retira temporizadores, suscripción de eventos del panel y reconsultas al recuperar foco/visibilidad. Se consulta al entrar, cambiar de sección, guardar o actualizar manualmente; los errores de autorización siguen tratándose en cada solicitud y la sesión se sincroniza tras acciones de acceso.
 - Navegación agrupada lateral en escritorio y desplegable en móvil; título y descripción contextual. Mantener query tab y alias.
 - Paleta carbón, marfil y acento rojo coherente con el sitio; tarjetas compactas, campos en dos columnas y tablas con scroll contenido.
 

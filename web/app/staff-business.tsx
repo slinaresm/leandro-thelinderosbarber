@@ -11,7 +11,7 @@ function promotionFields(row?: Promotion): Field[] { return [{ name: 'title', la
 function PromotionEdit({ row, reload }: { row: Promotion; reload: () => Promise<void> }) {
   const [edit, setEdit] = useState(false), [saved, setSaved] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  return <><button ref={trigger} className="staff-edit-toggle" aria-expanded={edit} onClick={() => { setEdit(!edit); setSaved(false); }}>{edit ? 'Cerrar edición' : 'Editar promoción'}</button>{edit && <RecordForm title={'Editar ' + row.title} fields={promotionFields(row)} endpoint={'/promotions/' + row.id} method="PATCH" onSaved={async () => { await reload(); setEdit(false); setSaved(true); trigger.current?.focus(); }} />}{saved && <p className="staff-success" role="status">Cambios guardados en {row.title}.</p>}</>;
+  return <><button ref={trigger} className="staff-edit-toggle" aria-expanded={edit} onClick={() => { setEdit(!edit); setSaved(false); }}>{edit ? 'Cerrar edición' : 'Editar promoción'}</button>{edit && <RecordForm title={'Editar ' + row.title} fields={promotionFields(row)} endpoint={'/promotions/' + row.id} method="PATCH" onCancel={() => { setEdit(false); trigger.current?.focus(); }} onSaved={async () => { await reload(); setEdit(false); setSaved(true); trigger.current?.focus(); }} />}{saved && <p className="staff-success" role="status">Cambios guardados en {row.title}.</p>}</>;
 }
 export function StaffPromotions({ revision }: { revision: number }) {
   const resource = useResource<{ promotions: Promotion[] }>('/promotions', revision), counts = useResource<{ segments: Record<string, number> }>('/promotions/segments/counts', revision);

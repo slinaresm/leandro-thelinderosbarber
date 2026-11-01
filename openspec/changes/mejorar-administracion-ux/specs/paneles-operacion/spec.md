@@ -1,5 +1,16 @@
 ## ADDED Requirements
 
+### Requirement: Edición modal y datos bajo control del usuario
+Las ediciones CRUD SHALL abrirse en modales con Guardar y Cancelar. Cancelar o Escape SHALL descartar cambios sin mutación y devolver el foco; un error SHALL conservar los valores. Durante el envío SHALL impedir doble envío y cierre. El panel SHALL actualizar sus datos solo al entrar, navegar, guardar o solicitar actualización manual, sin temporizadores, eventos en vivo ni recargas al recuperar foco.
+
+#### Scenario: Cancelar una edición sin interrupciones
+- **WHEN** modifica un registro, espera más de treinta segundos y cancela
+- **THEN** no se realiza ninguna escritura ni actualización automática y el registro conserva sus valores originales
+
+#### Scenario: Guardar con error y corregir
+- **WHEN** el servidor rechaza una edición
+- **THEN** el modal mantiene el borrador y permite corregir o cancelar
+
 ### Requirement: Descubrimiento de registros administrativos
 Los catálogos de servicios, barberos, productos, materiales y promociones SHALL permitir buscar por texto, ordenar por nombre y paginar resultados. Los registros con estado activo SHALL permitir filtrarlo. La pantalla SHALL distinguir una colección vacía de una búsqueda sin coincidencias y permitir limpiar filtros.
 

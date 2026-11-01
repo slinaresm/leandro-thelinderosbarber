@@ -26,6 +26,67 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterEach(async ({ page }) => expect((page as Page & { errors: string[] }).errors).toEqual([]));
 
+test('RF024 edición modal: cancelar y Escape descartan cambios en todos los catálogos y cuentas', async ({ page }) => {
+  await sql("INSERT INTO promotions (id,title,description,segment,active) VALUES ('rf024-promo','Promoción RF024','Prueba local','todos',1)");
+  try {
+    await login(page);
+    for (const [section, selector, label, field] of [
+      ['Servicios', '.client-card', 'Editar Corte de cabello', 'Nombre del servicio'],
+      ['Productos', '.staff-product', 'Editar Pomada de la casa', 'Nombre del producto'],
+      ['Materiales', '.client-card', 'Editar Guantes de trabajo', 'Cantidad física'],
+      ['Barberos', '.client-card', 'Editar Cuenta sintética barbero', 'Especialidad'],
+      ['Promociones', '.client-card', 'Editar promoción', 'Título'],
+      ['Cuentas', '.user-record', 'Editar usuario', 'Nombre completo'],
+    ]) {
+      await tab(page, section);
+      const trigger = page.locator(selector).getByRole('button', { name: label, exact: true }).first();
+      await trigger.click();
+      const dialog = page.locator('dialog.staff-edit-modal[open]');
+      await expect(dialog).toBeVisible();
+      const input = dialog.getByLabel(field, { exact: true }), original = await input.inputValue();
+      let writes = 0;
+      const track = (request: import('@playwright/test').Request) => { if (['PATCH','POST','DELETE'].includes(request.method())) writes++; };
+      page.on('request', track);
+      await input.fill(field === 'Cantidad física' ? '999' : 'Borrador sin guardar');
+      await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
+      await expect(dialog).toHaveCount(0); await expect(trigger).toBeFocused();
+      await trigger.click(); await expect(page.locator('dialog.staff-edit-modal[open]').getByLabel(field, { exact: true })).toHaveValue(original);
+      await page.keyboard.press('Escape'); await expect(dialog).toHaveCount(0); await expect(trigger).toBeFocused();
+      expect(writes).toBe(0); page.off('request', track);
+    }
+  } finally { await sql("DELETE FROM promotions WHERE id='rf024-promo'"); }
+});
+
+test('RF024 error conserva borrador, guardar cierra modal y no hay actualización automática', async ({ page }) => {
+  test.setTimeout(90000);
+  await login(page); await tab(page, 'Servicios');
+  const card = page.locator('.client-card').filter({ has: page.getByRole('heading', { name: 'Corte de cabello', exact: true }) });
+  await card.getByRole('button', { name: 'Editar Corte de cabello', exact: true }).click();
+  const dialog = page.locator('dialog.staff-edit-modal[open]'), form = dialog.getByRole('form');
+  await form.getByLabel('Precio (CLP)', { exact: true }).fill('12000');
+  await page.route('**/api/services/rf014-service', async route => { if (route.request().method() === 'PATCH') { await new Promise(resolve => setTimeout(resolve, 1500)); await route.fulfill({ status: 400, json: { error: 'Revisa los datos del servicio.' } }); } else await route.continue(); });
+  await formSave(form); await expect(form.getByRole('button', { name: 'Cancelar', exact: true })).toBeDisabled(); await page.keyboard.press('Escape'); await expect(dialog).toBeVisible();
+  await expect(form.getByRole('alert')).toBeVisible(); await expect(form.getByLabel('Precio (CLP)', { exact: true })).toHaveValue('12000');
+  await page.unroute('**/api/services/rf014-service');
+  const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-024'); fs.mkdirSync(directory, { recursive: true });
+  await page.screenshot({ path: path.join(directory, 'edicion-modal-1440.png') });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const bounds = await dialog.boundingBox(); expect(bounds!.x).toBeGreaterThan(0);
+  await expect(dialog.getByRole('button', { name: 'Cancelar', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: path.join(directory, 'edicion-modal-390.png') });
+  let gets = 0;
+  const track = (request: import('@playwright/test').Request) => { if (request.method() === 'GET' && request.url().includes('/api/')) gets++; };
+  page.on('request', track);
+  await page.evaluate(() => { window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange')); });
+  await page.waitForTimeout(35000); expect(gets).toBe(0);
+  await expect(form.getByLabel('Precio (CLP)', { exact: true })).toHaveValue('12000');
+  page.off('request', track);
+  await formSave(form); await expect(dialog).toHaveCount(0); await expect(card).toContainText('$12.000');
+  expect((await sql("SELECT price FROM services WHERE id='rf014-service'" ) as { price: number }[])[0].price).toBe(12000);
+  await page.getByRole('button', { name: 'Actualizar panel', exact: false }).click(); await expect(card).toContainText('$12.000');
+});
+
 test('cuatro consultas privadas: matriz HTTP real, proyecciones y validación', async ({ page, browser }) => {
   const paths = ['/services/admin/all', '/barbers/admin/all', '/products/admin/movements', '/barbers/me/profile'];
   for (const endpoint of paths) expect((await page.request.get('/api' + endpoint)).status()).toBe(401);
@@ -109,8 +170,8 @@ test('notas privadas texto literal, borrado y rechazo admin/otro barbero', async
 });
 
 test('horario propio validado y materiales: solicitud, competencia y resolución sin sumar cantidad', async ({ page, browser }) => {
-  await login(page, 'barbero'); await tab(page, 'Horario'); const form = page.getByRole('form', { name: 'Horario de atención' }); await form.getByLabel('Apertura').fill('20:00'); await form.getByLabel('Cierre').fill('10:00'); await formSave(form); await expect(form.getByRole('alert')).toBeVisible();
-  await form.getByLabel('Apertura').fill('10:00'); await form.getByLabel('Cierre').fill('21:00'); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+  await login(page, 'barbero'); await tab(page, 'Horario'); await page.getByRole('button', { name: 'Horario de atención', exact: true }).click(); const form = page.getByRole('form', { name: 'Horario de atención' }); await form.getByLabel('Apertura').fill('20:00'); await form.getByLabel('Cierre').fill('10:00'); await formSave(form); await expect(form.getByRole('alert')).toBeVisible();
+  await form.getByLabel('Apertura').fill('10:00'); await form.getByLabel('Cierre').fill('21:00'); await formSave(form); await expect(form).toHaveCount(0);
   expect((await api(page.context(), '/barbers/' + fixture.actors.barbero2.profile, { work_start: '10:00', work_end: '20:00' }, 'PATCH')).status()).toBe(403);
   await tab(page, 'Materiales'); const material = page.locator('article').filter({ hasText: 'Guantes de trabajo' }); await confirm(page, material, 'Solicitar reposición'); await expect(material).toContainText('Pendiente');
   expect((await api(page.context(), '/inventory/material/request')).status()).toBe(200);

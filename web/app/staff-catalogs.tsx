@@ -11,7 +11,7 @@ export function Schedule({ barber, saved }: { barber: Barber; saved: () => Promi
 function Editable({ title, fields, endpoint, reload }: { title: string; fields: Field[]; endpoint: string; reload: () => Promise<void> }) {
   const [open, setOpen] = useState(false), [saved, setSaved] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  return <><button ref={trigger} className="staff-edit-toggle" aria-expanded={open} onClick={() => { setOpen(!open); setSaved(false); }}>{open ? 'Cerrar edición' : 'Editar ' + title}</button>{open && <RecordForm title={'Editar ' + title} fields={fields} confirmation="Revisa los valores antes de guardar. Los ajustes de existencias quedarán registrados en el historial." endpoint={endpoint} method="PATCH" onSaved={async () => { await reload(); setOpen(false); setSaved(true); trigger.current?.focus(); }} />}{saved && <p className="staff-success" role="status">Cambios guardados en {title}.</p>}</>;
+  return <><button ref={trigger} className="staff-edit-toggle" aria-expanded={open} onClick={() => { setOpen(!open); setSaved(false); }}>{open ? 'Cerrar edición' : 'Editar ' + title}</button>{open && <RecordForm title={'Editar ' + title} fields={fields} confirmation="Revisa los valores antes de guardar. Los ajustes de existencias quedarán registrados en el historial." endpoint={endpoint} method="PATCH" onCancel={() => { setOpen(false); trigger.current?.focus(); }} onSaved={async () => { await reload(); setOpen(false); setSaved(true); trigger.current?.focus(); }} />}{saved && <p className="staff-success" role="status">Cambios guardados en {title}.</p>}</>;
 }
 export function StaffBarbers({ revision }: { revision: number }) {
   const resource = useResource<{ barbers: Barber[] }>('/barbers/admin/all', revision);

@@ -30,7 +30,7 @@ export function ResourceState({ resource }: { resource: { error: string; loading
   return <>{resource.loading && <p role="status">Actualizando datos…</p>}{resource.error && <p className="form-error" role="alert">{resource.error} Los datos anteriores pueden estar desactualizados. <button onClick={resource.reload}>Reintentar consulta</button></p>}</>;
 }
 export type Field = { name: string; label: string; type?: 'text' | 'email' | 'password' | 'number' | 'time' | 'date' | 'textarea' | 'checkbox' | 'file' | 'select'; value?: string | number | boolean | null; required?: boolean; min?: number; max?: number; maxLength?: number; nullable?: boolean; options?: [string, string][]; accept?: string; step?: number };
-export function RecordForm({ title, fields, endpoint, method = 'POST', onSaved, submit = 'Guardar', headers = {}, extra = {}, confirmation, confirmationTitle = 'Confirmar cambios' }: { title: string; fields: Field[]; endpoint: string; method?: 'POST' | 'PATCH'; onSaved: () => Promise<void> | void; submit?: string; headers?: Record<string, string>; extra?: Record<string, unknown>; confirmation?: string; confirmationTitle?: string }) {
+function RecordFields({ title, fields, endpoint, method = 'POST', onSaved, submit = 'Guardar', headers = {}, extra = {}, confirmation, confirmationTitle = 'Confirmar cambios', onCancel, onBusy }: { title: string; fields: Field[]; endpoint: string; method?: 'POST' | 'PATCH'; onSaved: () => Promise<void> | void; submit?: string; headers?: Record<string, string>; extra?: Record<string, unknown>; confirmation?: string; confirmationTitle?: string; onCancel?: () => void; onBusy?: (busy: boolean) => void }) {
   const [pending, setPending] = useState(false), [error, setError] = useState(''), [saved, setSaved] = useState('');
   const lock = useRef(false), alert = useRef<HTMLParagraphElement>(null);
   const formRef = useRef<HTMLFormElement>(null), reviewDialog = useRef<HTMLDialogElement>(null);
@@ -56,14 +56,32 @@ export function RecordForm({ title, fields, endpoint, method = 'POST', onSaved, 
       }
       const body = multipart ? new FormData() : values;
       if (body instanceof FormData) for (const [key, value] of Object.entries(values)) { if (value instanceof File) body.append(key, value); else body.append(key, value === null ? '' : typeof value === 'boolean' ? value ? '1' : '0' : String(value)); }
-      lock.current = true; setPending(true); setError(''); setSaved('');
+      lock.current = true; setPending(true); onBusy?.(true); setError(''); setSaved('');
       await mutate(endpoint, body, method, headers); setSaved('Cambios confirmados.'); if (method === 'POST') form.reset(); await onSaved();
     } catch (error) { setError(error instanceof ApiError && error.status === 0 ? 'No conocemos el resultado. Actualiza los datos antes de volver a enviar.' : errorText(error)); }
-    finally { lock.current = false; setPending(false); }
+    finally { lock.current = false; setPending(false); onBusy?.(false); }
   }
   return <form ref={formRef} className="staff-form" onSubmit={event => { event.preventDefault(); if (confirmation) reviewDialog.current?.showModal(); else void send(event.currentTarget); }} aria-label={title} aria-busy={pending}><fieldset disabled={pending}><legend>{title}</legend><p className="staff-form-help">Los campos marcados con * son obligatorios.</p><div className="staff-fields">{fields.map(field => <label key={field.name} className={field.type === 'checkbox' ? 'check-label' : field.type === 'textarea' || field.type === 'file' ? 'staff-field-wide' : ''}>{field.label}{field.required && <span className="staff-required" aria-hidden="true"> *</span>}
     {field.type === 'select' ? <select aria-label={field.label} name={field.name} defaultValue={String(field.value ?? '')} required={field.required}>{field.options?.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select> : field.type === 'textarea' ? <textarea aria-label={field.label} name={field.name} defaultValue={String(field.value ?? '')} required={field.required} maxLength={field.maxLength ?? 10000} /> : <input aria-label={field.label} type={field.type || 'text'} name={field.name} defaultValue={field.type === 'file' || field.type === 'checkbox' ? undefined : String(field.value ?? '')} defaultChecked={field.type === 'checkbox' ? Boolean(Number(field.value)) : undefined} required={field.required} min={field.min} max={field.type === 'number' ? field.max ?? Number.MAX_SAFE_INTEGER : field.max} step={field.type === 'number' ? 1 : field.type === 'time' ? field.step ?? 60 : undefined} minLength={field.type === 'password' ? 12 : undefined} maxLength={field.maxLength ?? (field.type === 'password' ? 72 : 200)} accept={field.accept} autoComplete={field.type === 'password' ? 'new-password' : undefined} />}
-  </label>)}</div><div className="staff-form-actions"><button type="submit">{pending ? 'Guardando…' : submit}</button><span>Revisa los datos antes de guardar.</span></div></fieldset>{confirmation && <dialog ref={reviewDialog} aria-label={confirmationTitle}><h2>{confirmationTitle}</h2><p>{confirmation}</p><button type="button" onClick={() => { reviewDialog.current?.close(); if (formRef.current) void send(formRef.current); }}>{confirmationTitle + ' definitivamente'}</button><button className="staff-secondary" type="button" onClick={() => reviewDialog.current?.close()}>Volver sin cambios</button></dialog>}{error && <p ref={alert} tabIndex={-1} className="form-error" role="alert">{error}</p>}{saved && <p className="staff-success" role="status">✓ {saved}</p>}</form>;
+  </label>)}</div><div className="staff-form-actions"><button type="submit">{pending ? 'Guardando…' : submit}</button>{onCancel && <button type="button" className="staff-secondary" onClick={onCancel}>Cancelar</button>}<span>Revisa los datos antes de guardar.</span></div></fieldset>{confirmation && <dialog ref={reviewDialog} aria-label={confirmationTitle}><h2>{confirmationTitle}</h2><p>{confirmation}</p><button type="button" onClick={() => { reviewDialog.current?.close(); if (formRef.current) void send(formRef.current); }}>{confirmationTitle + ' definitivamente'}</button><button className="staff-secondary" type="button" onClick={() => reviewDialog.current?.close()}>Volver sin cambios</button></dialog>}{error && <p ref={alert} tabIndex={-1} className="form-error" role="alert">{error}</p>}{saved && <p className="staff-success" role="status">✓ {saved}</p>}</form>;
+}
+export function RecordForm(props: Parameters<typeof RecordFields>[0]) {
+  const modal = props.method === 'PATCH';
+  const [open, setOpen] = useState(modal && !!props.onCancel), [busy, setBusy] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null);
+  const returnFocus = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    if (!modal || !open) return;
+    returnFocus.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const element = dialog.current;
+    const previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden';
+    element?.showModal();
+    return () => { element?.close(); document.documentElement.style.overflow = previousOverflow; returnFocus.current?.focus(); };
+  }, [modal, open]);
+  function close() { if (busy) return; setOpen(false); props.onCancel?.(); trigger.current?.focus(); }
+  if (!modal) return <RecordFields {...props} />;
+  return <>{!props.onCancel && <button ref={trigger} type="button" className="staff-edit-toggle" aria-haspopup="dialog" onClick={() => setOpen(true)}>{props.title}</button>}<dialog ref={dialog} className="staff-edit-modal" aria-label={props.title} onCancel={event => { event.preventDefault(); close(); }}>{open && <RecordFields {...props} onCancel={close} onBusy={setBusy} onSaved={async () => { await props.onSaved(); setOpen(false); }} />}</dialog></>;
 }
 export function ConfirmAction({ label, description, action, disabled = false }: { label: string; description: string; action: () => Promise<string | void>; disabled?: boolean }) {
   const [open, setOpen] = useState(false), [pending, setPending] = useState(false), [error, setError] = useState(''), [message, setMessage] = useState('');
