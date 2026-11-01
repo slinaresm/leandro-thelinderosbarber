@@ -1,0 +1,12 @@
+{
+  "status": "published-front-update",
+  "filesPublished": 91,
+  "previousFilesBackedUp": 121,
+  "backupPrivateFile": "rf017-public-before-41259138771.tar",
+  "backupSha256": "70d4788e627ca1640ec2902a1521a62b6df5052eb8b1e901a72afddca51f71c8",
+  "backupReadBackVerified": true,
+  "previousAssetsPreserved": true,
+  "apiMaintenanceUnchanged": true,
+  "apiMaintenanceActive": false,
+  "databaseWrites": 0
+}

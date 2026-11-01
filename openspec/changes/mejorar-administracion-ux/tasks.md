@@ -12,4 +12,4 @@
 - [x] 3.1 Ejecutar typecheck, build y pruebas reales del panel con datos sintéticos; registrar evidencia sin secretos y actualizar issue.
 ## 4. RF-024 Edición modal y consultas manuales
 - [x] 4.1 Unificar ediciones en modales Guardar/Cancelar, conservar borrador ante errores y bloquear cierre durante envío; retirar actualizaciones automáticas del panel y al recuperar foco.
-- [ ] 4.2 Verificar en navegador guardar, cancelar/Escape, foco, errores, móvil y ausencia de consultas automáticas; compilar y publicar con evidencia.
+- [x] 4.2 Verificar en navegador guardar, cancelar/Escape, foco, errores, móvil y ausencia de consultas automáticas; compilar y publicar con evidencia.

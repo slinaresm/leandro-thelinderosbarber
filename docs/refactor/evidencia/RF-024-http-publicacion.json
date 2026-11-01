@@ -1,0 +1,41 @@
+{
+  "scope": "RF-024-modal-manual-refresh-publication",
+  "checks": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/ingresar",
+      "status": 200
+    },
+    {
+      "path": "/administracion?tab=cuentas",
+      "status": 200
+    },
+    {
+      "path": "/api/health",
+      "status": 200
+    },
+    {
+      "path": "/api/auth/csrf",
+      "status": 200
+    },
+    {
+      "path": "/api/users",
+      "status": 401
+    }
+  ],
+  "usersCode": [
+    "/assets/staff-panel-EMdtxtTT.js"
+  ],
+  "usersStyles": [
+    "/assets/staff-panel-DlA1Pkin.css"
+  ],
+  "status": "passed",
+  "authenticatedRemoteSmoke": false,
+  "productionAccountsCreated": 0,
+  "modalCodeVerified": true,
+  "modalStylesVerified": true,
+  "panelWithoutIntervalVerified": true
+}
