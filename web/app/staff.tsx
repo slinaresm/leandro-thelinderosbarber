@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, Navigate, useLocation } from 'react-router';
 import { get, mutate, ApiError } from './http';
 import { errorText } from './client';
@@ -65,7 +65,9 @@ function RecordFields({ title, fields, endpoint, method = 'POST', onSaved, submi
     {field.type === 'select' ? <select aria-label={field.label} name={field.name} defaultValue={String(field.value ?? '')} required={field.required}>{field.options?.map(([value, text]) => <option key={value} value={value}>{text}</option>)}</select> : field.type === 'textarea' ? <textarea aria-label={field.label} name={field.name} defaultValue={String(field.value ?? '')} required={field.required} maxLength={field.maxLength ?? 10000} /> : <input aria-label={field.label} type={field.type || 'text'} name={field.name} defaultValue={field.type === 'file' || field.type === 'checkbox' ? undefined : String(field.value ?? '')} defaultChecked={field.type === 'checkbox' ? Boolean(Number(field.value)) : undefined} required={field.required} min={field.min} max={field.type === 'number' ? field.max ?? Number.MAX_SAFE_INTEGER : field.max} step={field.type === 'number' ? 1 : field.type === 'time' ? field.step ?? 60 : undefined} minLength={field.type === 'password' ? 12 : undefined} maxLength={field.maxLength ?? (field.type === 'password' ? 72 : 200)} accept={field.accept} autoComplete={field.type === 'password' ? 'new-password' : undefined} />}
   </label>)}</div><div className="staff-form-actions"><button type="submit">{pending ? 'Guardando…' : submit}</button>{onCancel && <button type="button" className="staff-secondary" onClick={onCancel}>Cancelar</button>}<span>Revisa los datos antes de guardar.</span></div></fieldset>{confirmation && <dialog ref={reviewDialog} aria-label={confirmationTitle}><h2>{confirmationTitle}</h2><p>{confirmation}</p><button type="button" onClick={() => { reviewDialog.current?.close(); if (formRef.current) void send(formRef.current); }}>{confirmationTitle + ' definitivamente'}</button><button className="staff-secondary" type="button" onClick={() => reviewDialog.current?.close()}>Volver sin cambios</button></dialog>}{error && <p ref={alert} tabIndex={-1} className="form-error" role="alert">{error}</p>}{saved && <p className="staff-success" role="status">✓ {saved}</p>}</form>;
 }
+export const CreateFormContext = createContext<{ cancel: () => void; saved: () => void; onBusy: (busy: boolean) => void } | null>(null);
 export function RecordForm(props: Parameters<typeof RecordFields>[0]) {
+  const creation = useContext(CreateFormContext);
   const modal = props.method === 'PATCH';
   const [open, setOpen] = useState(modal && !!props.onCancel), [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null);
@@ -80,6 +82,7 @@ export function RecordForm(props: Parameters<typeof RecordFields>[0]) {
     return () => { element?.close(); document.documentElement.style.overflow = previousOverflow; returnFocus.current?.focus(); };
   }, [modal, open]);
   function close() { if (busy) return; setOpen(false); props.onCancel?.(); trigger.current?.focus(); }
+  if (creation) return <RecordFields {...props} onCancel={creation.cancel} onBusy={creation.onBusy} onSaved={async () => { await props.onSaved(); creation.saved(); }} />;
   if (!modal) return <RecordFields {...props} />;
   return <>{!props.onCancel && <button ref={trigger} type="button" className="staff-edit-toggle" aria-haspopup="dialog" onClick={() => setOpen(true)}>{props.title}</button>}<dialog ref={dialog} className="staff-edit-modal" aria-label={props.title} onCancel={event => { event.preventDefault(); close(); }}>{open && <RecordFields {...props} onCancel={close} onBusy={setBusy} onSaved={async () => { await props.onSaved(); setOpen(false); }} />}</dialog></>;
 }

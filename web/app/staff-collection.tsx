@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { CreateFormContext } from './staff';
 
 const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
 
@@ -26,7 +27,16 @@ export function StaffCollection<T extends { id: string }>({ rows, label, name, s
 }
 
 export function CreateRecord({ title, children }: { title: string; children: ReactNode }) {
-  return <details className="staff-create"><summary><span aria-hidden="true">＋</span> {title}<span className="staff-create-hint">Abrir / cerrar formulario</span></summary><div className="staff-create-body">{children}</div></details>;
+  const [open, setOpen] = useState(false), [busy, setBusy] = useState(false);
+  const dialog = useRef<HTMLDialogElement>(null), trigger = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const element = dialog.current, previousOverflow = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = 'hidden'; element?.showModal();
+    return () => { element?.close(); document.documentElement.style.overflow = previousOverflow; trigger.current?.focus(); };
+  }, [open]);
+  function cancel() { if (!busy) setOpen(false); }
+  return <div className="staff-create"><button ref={trigger} type="button" aria-haspopup="dialog" onClick={() => setOpen(true)}><span aria-hidden="true">＋</span> {title}</button><dialog ref={dialog} className="staff-edit-modal staff-create-modal" aria-label={title} onCancel={event => { event.preventDefault(); cancel(); }}>{open && <CreateFormContext.Provider value={{ cancel, saved: () => setOpen(false), onBusy: setBusy }}>{children}</CreateFormContext.Provider>}</dialog></div>;
 }
 
 export function StateBadge({ active }: { active: number | boolean }) {

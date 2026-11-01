@@ -26,6 +26,41 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterEach(async ({ page }) => expect((page as Page & { errors: string[] }).errors).toEqual([]));
 
+test('RF024 creación modal: cancelar seis altas, corregir error y guardar un registro real', async ({ page }) => {
+  await login(page);
+  for (const [section, title, field] of [
+    ['Servicios', 'Crear servicio', 'Nombre del servicio'], ['Productos', 'Crear producto', 'Nombre del producto'],
+    ['Materiales', 'Crear material', 'Nombre del material'], ['Barberos', 'Crear cuenta de barbero', 'Nombre'],
+    ['Promociones', 'Crear promoción', 'Título'], ['Cuentas', 'Crear usuario', 'Nombre completo'],
+  ]) {
+    await tab(page, section);
+    const trigger = page.locator('.staff-create > button').filter({ hasText: title }); await trigger.click();
+    const dialog = page.locator('dialog.staff-create-modal[open]'); await expect(dialog).toBeVisible();
+    let writes = 0;
+    const track = (request: import('@playwright/test').Request) => { if (['POST','PATCH','DELETE'].includes(request.method())) writes++; };
+    page.on('request', track);
+    await dialog.getByLabel(field, { exact: true }).fill('Borrador descartado'); await dialog.getByRole('button', { name: 'Cancelar', exact: true }).click();
+    await expect(dialog).toHaveCount(0); await expect(trigger).toBeFocused();
+    await trigger.click(); await expect(dialog.getByLabel(field, { exact: true })).toHaveValue(''); await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0); await expect(trigger).toBeFocused(); expect(writes).toBe(0); page.off('request', track);
+  }
+  await tab(page, 'Servicios'); await page.locator('.staff-create > button').filter({ hasText: 'Crear servicio' }).click();
+  const modal = page.locator('dialog.staff-create-modal[open]'), form = modal.getByRole('form');
+  await form.getByLabel('Nombre del servicio', { exact: true }).fill('Alta modal RF024');
+  await page.route('**/api/services', async route => { if (route.request().method() === 'POST') { await new Promise(resolve => setTimeout(resolve, 1500)); await route.fulfill({ status: 400, json: { error: 'Revisa los datos.' } }); } else await route.continue(); });
+  await formSave(form); await expect(form.getByRole('button', { name: 'Cancelar', exact: true })).toBeDisabled(); await page.keyboard.press('Escape'); await expect(modal).toBeVisible();
+  await expect(form.getByRole('alert')).toBeVisible(); await expect(form.getByLabel('Nombre del servicio', { exact: true })).toHaveValue('Alta modal RF024');
+  const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-024'); fs.mkdirSync(directory, { recursive: true });
+  await page.screenshot({ path: path.join(directory, 'creacion-modal-1440.png') }); await page.setViewportSize({ width: 390, height: 844 });
+  await expect(form.getByRole('button', { name: 'Cancelar', exact: true })).toBeVisible(); expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.screenshot({ path: path.join(directory, 'creacion-modal-390.png') });
+  await page.unroute('**/api/services');
+  try {
+    await formSave(form); await expect(modal).toHaveCount(0); await expect(page.getByRole('heading', { name: 'Alta modal RF024', exact: true })).toBeVisible();
+    expect((await sql("SELECT COUNT(*) n FROM services WHERE name='Alta modal RF024'") as { n: number }[])[0].n).toBe(1);
+  } finally { await sql("DELETE FROM services WHERE name='Alta modal RF024'"); }
+});
+
 test('RF024 edición modal: cancelar y Escape descartan cambios en todos los catálogos y cuentas', async ({ page }) => {
   await sql("INSERT INTO promotions (id,title,description,segment,active) VALUES ('rf024-promo','Promoción RF024','Prueba local','todos',1)");
   try {
@@ -108,7 +143,7 @@ test('cuatro consultas privadas: matriz HTTP real, proyecciones y validación', 
 test('rutas por rol, alias con sección, recarga y panel ajeno', async ({ page }) => {
   await page.goto('/administracion?tab=servicios'); await expect(page).toHaveURL(/ingresar\?returnTo=/);
   await login(page); await page.goto('/admin/dashboard.html?tab=tienda&origen=guardado#contenido'); await expect(page).toHaveURL(/administracion\?tab=tienda&origen=guardado#contenido/); await expect(page.getByRole('heading', { level: 2, name: 'Productos', exact: true })).toBeVisible();
-  await page.reload(); await expect(page.getByRole('form', { name: 'Crear producto' })).toBeHidden(); await page.locator('summary').filter({ hasText: 'Crear producto' }).click(); await expect(page.getByRole('form', { name: 'Crear producto' })).toBeVisible();
+  await page.reload(); await expect(page.getByRole('form', { name: 'Crear producto' })).toBeHidden(); await page.locator('.staff-create > button').filter({ hasText: 'Crear producto' }).click(); await expect(page.getByRole('form', { name: 'Crear producto' })).toBeVisible();
   await page.goto('/barbero'); await expect(page.getByRole('heading', { name: 'Acceso no permitido' })).toBeVisible();
   await login(page, 'barbero'); await page.goto('/barbero/dashboard.html?tab=horario'); await expect(page.getByRole('form', { name: 'Horario de atención' })).toBeVisible();
   await page.goto('/administracion'); await expect(page.getByRole('heading', { name: 'Acceso no permitido' })).toBeVisible();
@@ -181,16 +216,16 @@ test('horario propio validado y materiales: solicitud, competencia y resolución
 });
 
 test('administración de servicios y barberos conserva bajas y no expone credenciales', async ({ page }) => {
-  await login(page); await tab(page, 'Servicios'); await page.locator('summary').filter({ hasText: 'Crear servicio' }).click(); const form = page.getByRole('form', { name: 'Crear servicio' }); await form.getByLabel('Nombre del servicio').fill('Servicio RF016'); await form.getByLabel('Precio (CLP)').fill('7500'); await form.getByLabel('Duración (minutos)').fill('60'); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+  await login(page); await tab(page, 'Servicios'); await page.locator('.staff-create > button').filter({ hasText: 'Crear servicio' }).click(); const form = page.getByRole('form', { name: 'Crear servicio' }); await form.getByLabel('Nombre del servicio').fill('Servicio RF016'); await form.getByLabel('Precio (CLP)').fill('7500'); await form.getByLabel('Duración (minutos)').fill('60'); await formSave(form); await expect(form).toHaveCount(0);
   const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Servicio RF016', exact: true }) }); await card.getByRole('button', { name: 'Editar Servicio RF016' }).click(); const edit = card.getByRole('form'); await edit.getByLabel('Precio (CLP)').fill('8500'); await formSave(edit); await expect(card).toContainText('$8.500');
   await confirm(page, card, 'Desactivar servicio'); await expect(card).toContainText('Inactivo'); expect((await (await page.request.get('/api/services')).json()).services.some((row: { name: string }) => row.name === 'Servicio RF016')).toBe(false);
   await confirm(page, card, 'Reactivar servicio'); await expect(card).toContainText('Activo');
-  await tab(page, 'Barberos'); await page.locator('summary').filter({ hasText: 'Crear cuenta de barbero' }).click(); const create = page.getByRole('form', { name: 'Crear cuenta de barbero' }); await create.getByLabel('Nombre', { exact: true }).fill('Barbero RF016'); await create.getByLabel('Correo electrónico').fill('nuevo-rf016@example.test'); await create.getByLabel('Contraseña inicial', { exact: false }).fill('Sintetica-Cuenta-2026'); await create.getByLabel('Especialidad').fill('Cortes clásicos'); await formSave(create); await expect(create.getByRole('status')).toContainText('Cambios confirmados');
+  await tab(page, 'Barberos'); await page.locator('.staff-create > button').filter({ hasText: 'Crear cuenta de barbero' }).click(); const create = page.getByRole('form', { name: 'Crear cuenta de barbero' }); await create.getByLabel('Nombre', { exact: true }).fill('Barbero RF016'); await create.getByLabel('Correo electrónico').fill('nuevo-rf016@example.test'); await create.getByLabel('Contraseña inicial', { exact: false }).fill('Sintetica-Cuenta-2026'); await create.getByLabel('Especialidad').fill('Cortes clásicos'); await formSave(create); await expect(create).toHaveCount(0);
   const barber = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Barbero RF016', exact: true }) }); await barber.getByRole('button', { name: 'Editar Barbero RF016' }).click(); await barber.getByRole('form').getByLabel('Especialidad').fill('Barba y corte'); await formSave(barber.getByRole('form')); await expect(barber).toContainText('Barba y corte'); await confirm(page, barber, 'Desactivar barbero'); await expect(barber).toContainText('Inactivo'); await confirm(page, barber, 'Reactivar barbero'); await expect(barber).toContainText('Activo');
 });
 
 test('producto multipart: imagen, edición de costo nulo, baja/alta y movimientos paginados', async ({ page }) => {
-  await login(page); await tab(page, 'Productos'); await page.locator('summary').filter({ hasText: 'Crear producto' }).click(); const form = page.getByRole('form', { name: 'Crear producto' }); await form.getByLabel('Nombre del producto').fill('Producto RF016'); await form.getByLabel('Precio de venta').fill('9000'); await form.getByLabel('Costo unitario').fill('3000'); await form.getByLabel('Existencias').fill('4'); await form.getByLabel('Imagen nueva', { exact: false }).setInputFiles({ name: 'producto.png', mimeType: 'image/png', buffer: png }); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+  await login(page); await tab(page, 'Productos'); await page.locator('.staff-create > button').filter({ hasText: 'Crear producto' }).click(); const form = page.getByRole('form', { name: 'Crear producto' }); await form.getByLabel('Nombre del producto').fill('Producto RF016'); await form.getByLabel('Precio de venta').fill('9000'); await form.getByLabel('Costo unitario').fill('3000'); await form.getByLabel('Existencias').fill('4'); await form.getByLabel('Imagen nueva', { exact: false }).setInputFiles({ name: 'producto.png', mimeType: 'image/png', buffer: png }); await formSave(form); await expect(form).toHaveCount(0);
   const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Producto RF016', exact: true }) }); await expect(card.locator('img')).toBeVisible(); const src = await card.locator('img').getAttribute('src'); expect((await page.request.get(src!)).status()).toBe(200);
   await card.getByRole('button', { name: 'Editar Producto RF016' }).click(); const edit = card.getByRole('form'); await edit.getByLabel('Costo unitario').fill(''); await edit.getByLabel('Existencias').fill('7'); await edit.getByLabel('Imagen nueva', { exact: false }).setInputFiles({ name: 'producto2.png', mimeType: 'image/png', buffer: png }); await formSave(edit); await expect(card).toContainText('Costo desconocido'); await expect(card).toContainText('7 unidades');
   await confirm(page, card, 'Desactivar producto'); await expect(card).toContainText('Inactivo'); await confirm(page, card, 'Reactivar producto'); await expect(card).toContainText('Activo');
@@ -320,7 +355,7 @@ test('administrador puede consultar y retirar foto ajena con confirmación', asy
 });
 
 test('promociones: alta, edición, estados y conteos, sin envío de campañas', async ({ page }) => {
-  await login(page); await tab(page, 'Promociones'); await page.locator('summary').filter({ hasText: 'Crear promoción' }).click(); const form = page.getByRole('form', { name: 'Crear promoción' }); await form.getByLabel('Título').fill('Promo RF016'); await form.getByLabel('Descripción').fill('Oferta para revisión'); await form.getByLabel('Segmento').selectOption('vip'); await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+  await login(page); await tab(page, 'Promociones'); await page.locator('.staff-create > button').filter({ hasText: 'Crear promoción' }).click(); const form = page.getByRole('form', { name: 'Crear promoción' }); await form.getByLabel('Título').fill('Promo RF016'); await form.getByLabel('Descripción').fill('Oferta para revisión'); await form.getByLabel('Segmento').selectOption('vip'); await formSave(form); await expect(form).toHaveCount(0);
   const card = page.locator('article').filter({ has: page.getByRole('heading', { name: 'Promo RF016', exact: true }) }); await card.getByRole('button', { name: 'Editar promoción' }).click(); const edit = card.getByRole('form'); await edit.getByLabel('Descripción').fill('Descripción corregida'); await formSave(edit); await expect(card).toContainText('Descripción corregida'); await confirm(page, card, 'Desactivar promoción'); await expect(card).toContainText('Inactivo'); await confirm(page, card, 'Reactivar promoción'); await expect(card).toContainText('Activo');
   const counts = await (await page.request.get('/api/promotions/segments/counts')).json(); expect(Object.keys(counts.segments).sort()).toEqual(['inactivos', 'nuevos', 'recurrentes', 'vip']); await expect(page.getByText('Las promociones se registran', { exact: false })).toBeVisible();
 });
@@ -481,11 +516,11 @@ test('RF023 usuarios: alta, edición, roles, contraseña y baja lógica conserva
   let id = ''; const password = 'Initial-RF023-1234', changed = 'Changed-RF023-1234';
   const peer = await browser.newContext({ baseURL: fixture.url });
   try {
-    await login(page); await tab(page, 'Cuentas'); await page.locator('summary').filter({ hasText: 'Crear usuario' }).click();
+    await login(page); await tab(page, 'Cuentas'); await page.locator('.staff-create > button').filter({ hasText: 'Crear usuario' }).click();
     const form = page.getByRole('form', { name: 'Crear usuario', exact: true });
     await form.getByLabel('Nombre completo', { exact: true }).fill('Usuario RF023'); await form.getByLabel('Correo electrónico', { exact: true }).fill('usuario-rf023@example.test');
     await form.getByLabel('Teléfono (opcional)', { exact: true }).fill('+56 9 1234 5678'); await form.getByLabel('Contraseña inicial', { exact: true }).fill(password); await form.getByLabel('Repetir contraseña inicial', { exact: true }).fill(password);
-    await formSave(form); await expect(form.getByRole('status')).toContainText('Cambios confirmados');
+    await formSave(form); await expect(form).toHaveCount(0);
     const user = (await sql("SELECT id FROM users WHERE email='usuario-rf023@example.test'"))[0]; id = user.id;
     const client = (await sql('SELECT id FROM clients WHERE user_id=?', [id]))[0];
     await sql("INSERT INTO reservations (id,client_id,barber_id,service_id,date,start_time,end_time,status,service_name_snapshot,service_price_snapshot,service_duration_snapshot,starts_at,ends_at) VALUES ('rf023-history',?,?,?,'2026-10-01','09:00','09:45','completed','Corte histórico',10000,45,'2026-10-01 12:00:00','2026-10-01 12:45:00')", [client.id, fixture.actors.barbero.profile, 'rf014-service']);
@@ -503,7 +538,6 @@ test('RF023 usuarios: alta, edición, roles, contraseña y baja lógica conserva
     await confirm(page, card, 'Desactivar usuario'); await expect(card).toContainText('Inactivo'); expect((await peer.request.get('/api/auth/me')).status()).toBe(401);
     expect((await sql("SELECT COUNT(*) n FROM reservations WHERE id='rf023-history'"))[0].n).toBe(1);
     await confirm(page, card, 'Reactivar usuario'); await expect(card).toContainText('Activo'); expect((await peer.request.get('/api/auth/me')).status()).toBe(401);
-    await page.locator('.staff-create > summary').click();
     await page.getByRole('searchbox', { name: 'Buscar usuarios' }).fill('RF023'); await expect(page.locator('.user-record')).toHaveCount(1);
     const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-023'); fs.mkdirSync(directory, { recursive: true });
     await expect(page.locator('.staff-section')).not.toContainText('Actualizando datos…');
@@ -582,18 +616,18 @@ test('RF019 búsqueda normalizada, filtros, páginas y formulario recuperable', 
     await expect(collection.getByRole('heading', { name: 'No encontramos coincidencias' })).toBeVisible();
     await collection.getByRole('button', { name: 'Ver todos los registros' }).click();
     await expect(collection.getByRole('searchbox')).toHaveValue('');
-    await page.locator('summary').filter({ hasText: 'Crear servicio' }).click();
+    await page.locator('.staff-create > button').filter({ hasText: 'Crear servicio' }).click();
     const form = page.getByRole('form', { name: 'Crear servicio' });
     await form.getByLabel('Nombre del servicio').fill('Borrador conservado');
     await page.route('**/api/services', route => route.request().method() === 'POST' ? route.fulfill({ status: 409, contentType: 'application/json', body: '{}' }) : route.continue());
     await formSave(form); await expect(form.getByRole('alert')).toBeVisible();
     await expect(form.getByLabel('Nombre del servicio')).toHaveValue('Borrador conservado');
-    await page.getByRole('button', { name: 'Actualizar panel' }).click();
     await expect(form.getByLabel('Nombre del servicio')).toHaveValue('Borrador conservado');
     const directory = path.join(root, 'docs/refactor/evidencia/capturas/RF-019'); fs.mkdirSync(directory, { recursive: true });
     await page.screenshot({ path: path.join(directory, 'admin-formulario-error-1440.png'), fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.screenshot({ path: path.join(directory, 'admin-formulario-error-390.png'), fullPage: true });
+    await form.getByRole('button', { name: 'Cancelar', exact: true }).click();
     await page.getByRole('button', { name: 'Secciones · Servicios' }).click();
     await page.getByRole('navigation', { name: 'Secciones del panel' }).getByRole('link', { name: 'Productos', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Productos', exact: true })).toBeVisible();

@@ -23,7 +23,7 @@ Los catálogos de servicios, barberos, productos, materiales y promociones SHALL
 - **THEN** se muestra la primera página de los resultados filtrados con su cantidad correcta
 
 ### Requirement: Formularios bajo demanda y navegación legible
-La administración SHALL presentar navegación agrupada y contexto de la sección. La creación de catálogos SHALL abrirse por decisión del usuario, indicando campos obligatorios, y conservar los valores ante errores. Edición y confirmaciones SHALL mantener navegación por teclado y no enviar cambios al cancelar. La interfaz SHALL adaptarse a móvil sin desplazamiento horizontal de toda la página.
+La administración SHALL presentar navegación agrupada y contexto de la sección. La creación SHALL indicar campos obligatorios y conservar los valores ante errores. Edición y confirmaciones SHALL mantener navegación por teclado y no enviar cambios al cancelar. La interfaz SHALL adaptarse a móvil sin desplazamiento horizontal de toda la página.
 
 #### Scenario: Crear y corregir un registro
 - **WHEN** abre creación y el servidor rechaza los valores
@@ -32,3 +32,10 @@ La administración SHALL presentar navegación agrupada y contexto de la secció
 #### Scenario: Navegar desde móvil
 - **WHEN** abre el panel en una pantalla de 390 píxeles
 - **THEN** puede cambiar de sección, buscar y operar formularios con controles visibles y foco distinguible
+
+### Requirement: Creación modal coherente
+La creación de catálogos y cuentas SHALL abrirse en modal con Guardar y Cancelar. Guardar satisfactoriamente SHALL cerrar el modal y actualizar el listado. Cancelar/Escape SHALL descartar el borrador sin escritura y devolver el foco. Durante el envío SHALL bloquear cierre y doble envío.
+
+#### Scenario: Descartar un alta
+- **WHEN** escribe un nuevo registro y cancela o pulsa Escape
+- **THEN** no se crea el registro y el formulario vuelve a abrirse vacío

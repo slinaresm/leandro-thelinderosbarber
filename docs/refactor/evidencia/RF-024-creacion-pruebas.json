@@ -1,0 +1,33 @@
+{
+  "date": "2026-10-31",
+  "scope": "RF-024 creación modal",
+  "status": "passed",
+  "browser": "Microsoft Edge / Chromium real, Playwright 1.64.1",
+  "backend": "PHP 8.4 / MariaDB 10.6.28 real",
+  "cases": [
+    {
+      "title": "RF024 creación modal: cancelar seis altas, corregir error y guardar un registro real",
+      "passed": true
+    },
+    {
+      "title": "administración de servicios y barberos conserva bajas y no expone credenciales",
+      "passed": true
+    },
+    {
+      "title": "producto multipart: imagen, edición de costo nulo, baja/alta y movimientos paginados",
+      "passed": true
+    },
+    {
+      "title": "promociones: alta, edición, estados y conteos, sin envío de campañas",
+      "passed": true
+    },
+    {
+      "title": "RF023 usuarios: alta, edición, roles, contraseña y baja lógica conservan perfil e historial",
+      "passed": true
+    }
+  ],
+  "typecheck": "passed",
+  "build": "passed",
+  "productionDataModified": false,
+  "published": false
+}

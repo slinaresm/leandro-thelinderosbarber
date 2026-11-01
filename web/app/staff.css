@@ -127,3 +127,5 @@
 
 /* Edición modal compartida: el fondo queda inerte y el formulario permite cancelar. */
 .staff-page dialog.staff-edit-modal{width:min(94vw,760px);max-height:90dvh;padding:28px 32px;overscroll-behavior:contain}.staff-page .staff-edit-modal .staff-form{margin:0;padding:0;border:0}.staff-page .staff-edit-modal .staff-form fieldset{margin:0}.staff-page .staff-edit-modal legend{font-size:23px;line-height:1.3;margin-bottom:14px}.staff-edit-modal .staff-form-actions{position:sticky;bottom:-28px;background:#20262c;padding-bottom:16px;z-index:1}.staff-edit-modal .staff-form-actions>span{flex-basis:100%}@media(max-width:580px){.staff-page dialog.staff-edit-modal{padding:22px 18px;width:calc(100vw - 24px)}.staff-edit-modal .staff-form-actions{bottom:-22px}.staff-edit-modal .staff-form-actions button{flex:1}}
+
+.staff-page div.staff-create{border:0;background:none;padding:0}.staff-page .staff-create>button{margin:0;display:inline-flex;gap:8px;align-items:center}.staff-create-modal>.user-access-note{margin-top:0}
