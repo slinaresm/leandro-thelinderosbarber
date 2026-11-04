@@ -1,12 +1,44 @@
 import { useEffect, useState } from 'react';
 import { get } from '../http';
 
-type Service = { id?: string; name: string; description?: string; price: number; duration_minutes: number };
+type Service = { id?: string; name: string; description?: string; price: number; duration_minutes?: number };
 type Barber = { id: string; name: string; specialty?: string };
 const reference: Service[] = [
-  { name: 'Corte de cabello', price: 10000, duration_minutes: 45 },
-  { name: 'Corte + barba', price: 15000, duration_minutes: 60 },
-  { name: 'Servicio premium', price: 18000, duration_minutes: 90 },
+  {
+    "name": "Corte de cabello",
+    "price": 12000,
+    "description": "Cualquier corte de cabello."
+  },
+  {
+    "name": "Barba",
+    "price": 6000,
+    "description": "Servicio de barba."
+  },
+  {
+    "name": "Cejas",
+    "price": 2000,
+    "description": "Arreglo de cejas."
+  },
+  {
+    "name": "Mascarilla",
+    "price": 4000,
+    "description": "Mascarilla facial."
+  },
+  {
+    "name": "Corte + barba + toallas calientes",
+    "price": 25000,
+    "description": "Corte, barba y toallas calientes."
+  },
+  {
+    "name": "Corte + barba simple + limpieza facial",
+    "price": 18900,
+    "description": "Promoción: corte, barba simple y limpieza facial."
+  },
+  {
+    "name": "Corte + barba simple",
+    "price": 16000,
+    "description": "Promoción: corte y barba simple."
+  }
 ];
 export function Services() {
   const [services, setServices] = useState(reference);
@@ -15,14 +47,14 @@ export function Services() {
     let live = true;
     get<{ services: Service[] }>('/services').then(data => {
       if (!Array.isArray(data.services)) throw new Error('Catálogo inválido');
-      if (live) { setServices(data.services); setStatus('ready'); }
+      if (live) { setServices(reference.map(service => { const match = data.services.find(item => item.name === service.name && Number(item.price) === service.price); return { ...service, id: match?.id, duration_minutes: match?.duration_minutes }; })); setStatus('ready'); }
     }).catch(() => { if (live) setStatus('failed'); });
     return () => { live = false; };
   }, []);
   return <><div id="services-list" className="v-services">
-    {services.map((service, index) => <article key={service.id || service.name} className="v-service"><span className="service-index">{String(index + 1).padStart(2, '0')} / {['EL CLÁSICO', 'EL COMPLETO', 'EL RITUAL'][index] || 'DE LA CASA'}</span>
+    {services.map((service, index) => <article key={service.id || service.name} className="v-service"><span className="service-index">{String(index + 1).padStart(2, '0')} / {index >= 5 ? 'PROMOCIÓN' : 'DE LA CASA'}</span>
       <div className="service-info"><h3>{service.name}</h3><p>{service.description || 'Servicio de barbería con asesoría de estilo y atención al detalle.'}</p></div>
-      <div className="service-meta"><span className="service-price">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(service.price)}</span><span className="service-duration">{service.duration_minutes} minutos</span></div>
+      <div className="service-meta"><span className="service-price">{new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(service.price)}</span>{service.duration_minutes && <span className="service-duration">{service.duration_minutes} minutos</span>}</div>
       <a className="service-book" href={'/reservar' + (service.id ? '?serviceId=' + encodeURIComponent(service.id) : '')} aria-label={'Reservar ' + service.name}>Reservar servicio <span aria-hidden="true">↗</span></a>
     </article>)}
     {services.length === 0 && <p className="loading-copy">Pronto compartiremos nuestra carta. Consulta los servicios al reservar.</p>}
